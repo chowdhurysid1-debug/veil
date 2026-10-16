@@ -107,7 +107,11 @@ describe("generateInputSchema", () => {
   });
 
   it("rejects a missing or non-string text field", () => {
-    expect(generateInputSchema.safeParse({}).success).toBe(false);
+    const missing = generateInputSchema.safeParse({});
+    expect(missing.success).toBe(false);
+    expect(missing.error?.issues[0]?.message).toBe(
+      'Send the text to summarize in a "text" field.',
+    );
     expect(generateInputSchema.safeParse({ text: 123 }).success).toBe(false);
   });
 });

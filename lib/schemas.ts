@@ -4,7 +4,7 @@ export const MAX_INPUT_CHARS = 4000;
 
 export const generateInputSchema = z.object({
   text: z
-    .string()
+    .string({ error: 'Send the text to summarize in a "text" field.' })
     .trim()
     .min(1, "Enter some text to summarize.")
     .max(MAX_INPUT_CHARS, `Keep the text under ${MAX_INPUT_CHARS} characters.`),
