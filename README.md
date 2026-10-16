@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hackathon template
 
-## Getting Started
+Next.js App Router starter for shipping one demo path fast. It includes a Zod-validated AI route that falls back to friendly copy whenever the model call or parsing fails.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router), TypeScript, Tailwind 4, shadcn/ui
+- Vercel AI SDK 7 with Anthropic. The model is pinned in `lib/ai.ts`.
+- Zod for every input and model output
+- Supabase clients in `lib/supabase/`. There's no schema yet.
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| File                        | Purpose                              |
+| --------------------------- | ------------------------------------ |
+| `SPEC.md`                   | The one demo path. Fill it in first. |
+| `lib/ai.ts`                 | Pinned model ID, token cap, timeout  |
+| `lib/schemas.ts`            | Input and output Zod schemas         |
+| `lib/fallbacks.ts`          | Fallback content and `withFallback`  |
+| `lib/generate.ts`           | Model call with structured output    |
+| `app/api/generate/route.ts` | Sample POST route                    |
+| `evals/demo-inputs.json`    | Demo inputs for `npm run evals`      |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Sample route
 
-## Learn More
+```bash
+curl -X POST localhost:3000/api/generate \
+  -H 'content-type: application/json' \
+  -d '{"text":"We cut checkout from five steps to two."}'
+```
 
-To learn more about Next.js, take a look at the following resources:
+The route has three possible results:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Success:** returns `{ data: { title, summary, tags }, isFallback: false }`.
+- **Bad input:** returns a 400 with a readable `error`.
+- **Model or parse failure:** returns the fallback with `isFallback: true`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Commands
 
-## Deploy on Vercel
+| Command         | What it does                                                     |
+| --------------- | ---------------------------------------------------------------- |
+| `npm run dev`   | Local server                                                     |
+| `npm test`      | Parsing and fallback tests (vitest, model mocked)                |
+| `npm run evals` | Runs demo inputs against the real model. Exits 1 on any failure. |
+| `npm run build` | Run this before deploying                                        |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with Chewbacca
