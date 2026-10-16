@@ -1,3 +1,5 @@
+import { DAILY_GENERATE_CAP, generateCallCap } from "@/lib/dailyCap";
+import { GENERATE_FALLBACK } from "@/lib/fallbacks";
 import { generateSummary } from "@/lib/generate";
 import { generateInputSchema } from "@/lib/schemas";
 
@@ -16,6 +18,13 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? "Invalid input.";
     return Response.json({ error: message }, { status: 400 });
+  }
+
+  if (!generateCallCap.tryConsume()) {
+    console.warn(
+      `[generate] daily cap of ${DAILY_GENERATE_CAP} calls reached, returning fallback`,
+    );
+    return Response.json({ data: GENERATE_FALLBACK, isFallback: true });
   }
 
   // Model and parse failures come back as the fallback, never as a raw error.
