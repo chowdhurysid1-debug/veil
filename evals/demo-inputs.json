@@ -1,0 +1,33 @@
+[
+  {
+    "id": "product-update",
+    "input": {
+      "text": "This sprint we cut checkout from five steps to two, added Apple Pay, and saw abandoned carts drop from 31% to 18% in the first week."
+    },
+    "expect": "ok"
+  },
+  {
+    "id": "meeting-notes",
+    "input": {
+      "text": "Standup notes: Priya is blocked on the Stripe webhook signature check. Marcus finished the onboarding email. Demo dry run moves to Thursday at 3pm. We still need a fallback screen for when the model is slow."
+    },
+    "expect": "ok"
+  },
+  {
+    "id": "single-sentence",
+    "input": {
+      "text": "The library extends weekend hours to 10pm starting in November."
+    },
+    "expect": "ok"
+  },
+  {
+    "id": "empty-text",
+    "input": { "text": "   " },
+    "expect": "rejected"
+  },
+  {
+    "id": "missing-field",
+    "input": { "body": "wrong key" },
+    "expect": "rejected"
+  }
+]
