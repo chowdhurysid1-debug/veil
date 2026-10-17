@@ -15,3 +15,4 @@ None yet.
 - A5: SHA-256 hashing with Web Crypto, known-vector tests for empty and "hello", 5 tests (7aa7f05)
 - A6: processClip orchestrator, ties A1-A5 together, progress events, validation tests, 3 tests (b63f24d)
 - A7: decryptFace unlock flow tests, full sequence + edge cases (1B, 100KB), 3 tests (1e48601)
+- A8: Hardening: 300s duration limit, empty MIME reject, zero-face validation, barrel exports, 57 total tests (9a27563)
