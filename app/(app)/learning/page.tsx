@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LearningDashboard } from "@/components/veil/LearningDashboard";
+import { MeasuredLearning } from "@/components/veil/MeasuredLearning";
 import { PageContainer, PageHeader } from "@/components/veil/PageHeader";
 
 export const metadata: Metadata = {
@@ -15,7 +16,10 @@ export default function LearningPage() {
         title="Learning"
         description="Every alert someone marks Real or False alarm tunes detection at every site. Nobody's face is part of a label."
       />
-      <LearningDashboard />
+      <div className="flex flex-col gap-10">
+        <MeasuredLearning />
+        <LearningDashboard />
+      </div>
     </PageContainer>
   );
 }

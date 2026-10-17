@@ -369,10 +369,26 @@ export type CurveResults = z.infer<typeof curveResultsSchema>;
 // The small file the app and the pitch import: evals/results/learning-curve-summary.json.
 export const curveSummarySchema = curveResultsSchema
   .omit({ runs: true })
-  .extend({ runs: z.int().min(1), arms: z.array(armSummarySchema) });
+  .extend({
+    runs: z.int().min(1),
+    arms: z.array(armSummarySchema),
+    // True when every real incident that went unflagged was a call that failed to
+    // parse (the app shows those as "review manually"), not learning hiding it.
+    everyMissWasFailedCall: z.boolean(),
+  });
 
 export type CurveSummary = z.infer<typeof curveSummarySchema>;
 
 export function buildSummary({ runs, ...meta }: CurveResults): CurveSummary {
-  return { ...meta, runs: runs.length, arms: summarizeRuns(runs) };
+  const clips = runs.flatMap((run) =>
+    run.arms.flatMap((arm) => arm.points.flatMap((point) => point.clips)),
+  );
+  return {
+    ...meta,
+    runs: runs.length,
+    arms: summarizeRuns(runs),
+    everyMissWasFailedCall: clips
+      .filter((clip) => scoreClip(clip.truth, clip.flagged).missed > 0)
+      .every((clip) => clip.isFallback),
+  };
 }
