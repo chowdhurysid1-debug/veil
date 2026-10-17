@@ -116,6 +116,23 @@ describe("detectFaces", () => {
   });
 
   // Real hallway footage: the face model found nobody, but people were walking past.
+  it("ignores a face box too big to be a face", async () => {
+    const { FaceDetector } = await import("@mediapipe/tasks-vision");
+    const faceModel = await (
+      FaceDetector as unknown as {
+        createFromOptions: () => Promise<{ detect: ReturnType<typeof vi.fn> }>;
+      }
+    ).createFromOptions();
+    faceModel.detect.mockReturnValueOnce({
+      detections: [
+        { boundingBox: { originX: 0, originY: 0, width: 300, height: 300 } },
+      ],
+    });
+
+    const result = await detectFaces([makeFakeFrame(0)]);
+    expect(result.totalFaces).toBe(0);
+  });
+
   it("locks the head of a person whose face the face model misses", async () => {
     const { FaceDetector, ObjectDetector } =
       await import("@mediapipe/tasks-vision");

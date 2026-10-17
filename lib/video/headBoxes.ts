@@ -15,11 +15,35 @@ const HEAD_HEIGHT_RATIO = 0.24;
 const HEAD_WIDTH_RATIO = 0.62;
 const HEAD_ASPECT = 1.25;
 
+// The person model returns one wide box for people standing close together,
+// like three students leaning on a wall. A standing person is about a third as
+// wide as tall, so a box wider than half its height may hold several heads.
+// Someone close to the camera, cut off by the frame, is wide too, but tall.
+const GROUP_ASPECT = 0.5;
+const GROUP_MAX_FRAME_HEIGHT = 0.75;
+const GROUP_BAND_HEIGHT_RATIO = 0.3;
+
 /**
- * Where the head is inside a detected person: top and centred.
- * Covers the back of the head and profiles, which a face detector misses.
+ * Where the head is inside a detected person: top and centred. For a box that
+ * may hold a group, a band across its whole width, so no head at the edge is
+ * missed. Covers the back of the head and profiles, which a face detector misses.
  */
-export function headFromPerson(person: PixelBox): PixelBox {
+export function headFromPerson(
+  person: PixelBox,
+  frameHeight: number,
+): PixelBox {
+  const isGroup =
+    person.width / person.height > GROUP_ASPECT &&
+    person.height < frameHeight * GROUP_MAX_FRAME_HEIGHT;
+  if (isGroup) {
+    return {
+      originX: person.originX,
+      originY: person.originY,
+      width: person.width,
+      height: person.height * GROUP_BAND_HEIGHT_RATIO,
+    };
+  }
+
   const width = Math.min(
     person.width * HEAD_WIDTH_RATIO,
     person.height * HEAD_HEIGHT_RATIO,
@@ -33,20 +57,12 @@ export function headFromPerson(person: PixelBox): PixelBox {
   };
 }
 
-/**
- * Overlapping tiles, each half the frame wide, so small faces are upscaled
- * enough for the short-range face model to see them.
- */
-export function faceTiles(frameWidth: number, frameHeight: number): PixelBox[] {
-  const width = frameWidth / 2;
-  const height = frameHeight / 1.5;
-  const tiles: PixelBox[] = [];
-  for (const originX of [0, frameWidth / 4, frameWidth / 2]) {
-    for (const originY of [0, frameHeight - height]) {
-      tiles.push({ originX, originY, width, height });
-    }
-  }
-  return tiles;
+// On security footage the short-range face model also fires on blank walls with
+// boxes a third of the frame wide. A real face on a fixed camera is far smaller.
+const MAX_FACE_WIDTH_RATIO = 0.2;
+
+export function isPlausibleFace(face: PixelBox, frameWidth: number): boolean {
+  return face.width > 0 && face.width <= frameWidth * MAX_FACE_WIDTH_RATIO;
 }
 
 /** Normalize a pixel box to 0..1 of the frame, clamped inside it. */

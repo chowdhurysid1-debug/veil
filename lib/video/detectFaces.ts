@@ -1,8 +1,8 @@
 import type { BoundingBox } from "@/lib/contracts";
 import type { ExtractedFrame } from "./extractFrames";
 import {
-  faceTiles,
   headFromPerson,
+  isPlausibleFace,
   mergeBoxes,
   normalizeBox,
   type PixelBox,
@@ -44,13 +44,15 @@ const WASM_CDN =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.0/wasm";
 const FACE_MODEL =
   "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite";
+// lite2, not lite0: on real hallway footage lite0 missed people walking in a group
+// and merged two people standing close into one box.
 const PERSON_MODEL =
-  "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
+  "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite";
 
 // Low on purpose: a missed person is an unblurred face, an extra box is only extra blur.
-const PERSON_SCORE_THRESHOLD = 0.3;
+// 0.1 catches people half out of frame and groups leaning on a wall, which score 0.1 to 0.3.
+const PERSON_SCORE_THRESHOLD = 0.1;
 const MAX_PEOPLE = 25;
-const TILE_WIDTH_PX = 640;
 
 async function getDetectors(): Promise<Detectors> {
   if (!detectorsPromise) {
@@ -88,61 +90,10 @@ async function getDetectors(): Promise<Detectors> {
   return detectorsPromise;
 }
 
-function createTileCanvas(width: number, height: number) {
-  if (typeof OffscreenCanvas !== "undefined") {
-    return new OffscreenCanvas(width, height);
-  }
-  if (typeof document !== "undefined") {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    return canvas;
-  }
-  return null;
-}
-
-/** Faces too small for the short-range model, found by upscaling each tile. */
-function detectInTiles(detector: Detector, image: DetectableImage): PixelBox[] {
-  const found: PixelBox[] = [];
-  for (const tile of faceTiles(image.width, image.height)) {
-    const scale = TILE_WIDTH_PX / tile.width;
-    const canvas = createTileCanvas(
-      TILE_WIDTH_PX,
-      Math.round(tile.height * scale),
-    );
-    // Only the Node test runner has no canvas; every browser has one.
-    if (!canvas) return found;
-    const ctx = canvas.getContext("2d") as
-      CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
-    if (!ctx) return found;
-    ctx.drawImage(
-      image,
-      tile.originX,
-      tile.originY,
-      tile.width,
-      tile.height,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    for (const { boundingBox: box } of detector.detect(canvas).detections) {
-      if (!box) continue;
-      found.push({
-        originX: tile.originX + box.originX / scale,
-        originY: tile.originY + box.originY / scale,
-        width: box.width / scale,
-        height: box.height / scale,
-      });
-    }
-  }
-  return found;
-}
-
 /**
- * Every head in one image, as normalized boxes. Three passes, merged:
- * faces on the full frame, faces on upscaled tiles for people far from the
- * camera, and the head region of every detected person for turned heads.
+ * Every head in one image, as normalized boxes. Two passes, merged: the head
+ * region of every detected person, which covers turned heads and people far
+ * from the camera, and faces the face model finds close up.
  */
 export async function detectHeads(
   image: DetectableImage,
@@ -151,11 +102,14 @@ export async function detectHeads(
   const pixelBoxes: PixelBox[] = [];
 
   for (const { boundingBox } of faces.detect(image).detections) {
-    if (boundingBox) pixelBoxes.push(boundingBox);
+    if (boundingBox && isPlausibleFace(boundingBox, image.width)) {
+      pixelBoxes.push(boundingBox);
+    }
   }
-  pixelBoxes.push(...detectInTiles(faces, image));
   for (const { boundingBox } of people.detect(image).detections) {
-    if (boundingBox) pixelBoxes.push(headFromPerson(boundingBox));
+    if (boundingBox) {
+      pixelBoxes.push(headFromPerson(boundingBox, image.height));
+    }
   }
 
   return mergeBoxes(

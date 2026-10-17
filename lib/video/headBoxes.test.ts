@@ -2,20 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import { boundingBoxSchema } from "@/lib/contracts";
 import {
-  faceTiles,
   headFromPerson,
+  isPlausibleFace,
   mergeBoxes,
   normalizeBox,
 } from "./headBoxes";
 
 describe("headFromPerson", () => {
   it("puts the head at the top centre of a standing person", () => {
-    const head = headFromPerson({
-      originX: 100,
-      originY: 50,
-      width: 100,
-      height: 400,
-    });
+    const head = headFromPerson(
+      { originX: 100, originY: 50, width: 100, height: 400 },
+      1080,
+    );
     expect(head.originY).toBe(50);
     // Width is capped by the shoulders: 0.62 * 100.
     expect(head.width).toBeCloseTo(62, 5);
@@ -24,20 +22,46 @@ describe("headFromPerson", () => {
 
   it("keeps the head inside a person cut off at the waist", () => {
     const person = { originX: 0, originY: 0, width: 300, height: 320 };
-    const head = headFromPerson(person);
+    const head = headFromPerson(person, 360);
     expect(head.width).toBeLessThanOrEqual(person.width);
     expect(head.height).toBeLessThanOrEqual(person.height);
   });
+
+  // Seen on real footage: three students leaning on a wall came back as one
+  // box, and a centred head box left the two outer faces unblurred.
+  it("blurs a band across the whole width of a box that may hold a group", () => {
+    const group = { originX: 140, originY: 115, width: 143, height: 256 };
+    const band = headFromPerson(group, 360);
+    expect(band.originX).toBe(140);
+    expect(band.width).toBe(143);
+    expect(band.height).toBeCloseTo(256 * 0.3, 5);
+  });
+
+  it("keeps a centred head for one person close to the camera", () => {
+    const close = { originX: 250, originY: 70, width: 220, height: 296 };
+    const head = headFromPerson(close, 360);
+    expect(head.width).toBeLessThan(close.width);
+  });
 });
 
-describe("faceTiles", () => {
-  it("covers the whole frame with overlapping tiles", () => {
-    const tiles = faceTiles(640, 360);
-    expect(tiles).toHaveLength(6);
-    const right = Math.max(...tiles.map((t) => t.originX + t.width));
-    const bottom = Math.max(...tiles.map((t) => t.originY + t.height));
-    expect(right).toBe(640);
-    expect(bottom).toBe(360);
+describe("isPlausibleFace", () => {
+  it("keeps faces the size a fixed camera sees", () => {
+    expect(
+      isPlausibleFace(
+        { originX: 300, originY: 40, width: 60, height: 70 },
+        640,
+      ),
+    ).toBe(true);
+  });
+
+  // Seen on real hallway footage: a 250px "face" on a blank wall.
+  it("drops wall-sized false positives", () => {
+    expect(
+      isPlausibleFace(
+        { originX: 10, originY: 0, width: 250, height: 250 },
+        640,
+      ),
+    ).toBe(false);
   });
 });
 
