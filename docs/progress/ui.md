@@ -7,6 +7,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - C3: clip view at /clips/[id]: blurred frame player with face-lock boxes, keyboard timeline with event markers, filmstrip, event cards with confidence vs learned threshold. 73e645e
 - Merged main (pipeline A1 to A8). Upload screen now runs `processClip` from `@/lib/video`; deleted the UI's duplicate mock pipeline and hash helper. `PipelineError` messages are shown to the officer as-is. 2e4e777
 - C4: Real / False alarm review with optimistic label, 5 s undo toast (request sent only when the toast closes), success toast "Learned from N new labels across M sites" with the new threshold. 302e373
+- C5: /learning dashboard (label totals, false-alarm trend chart with hover and table view, per-type threshold meters, recent labels) plus a shared-learning card on the clip view that pulses "Learned from 1 new label across 2 sites" after a label saves. 7f6a7e7
 
 ## Contract requests
 
