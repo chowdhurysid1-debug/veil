@@ -31,8 +31,7 @@ export function FrameImage({ src, alt, className, priority }: FrameImageProps) {
   );
 }
 
-/** Data URL for a frame from the pipeline, which may be a JPEG or a mock SVG. */
+/** Data URL for a blurred frame straight from the pipeline, which emits JPEG. */
 export function frameDataUrl(base64: string): string {
-  const mime = base64.startsWith("/9j/") ? "image/jpeg" : "image/svg+xml";
-  return `data:${mime};base64,${base64}`;
+  return `data:image/jpeg;base64,${base64}`;
 }

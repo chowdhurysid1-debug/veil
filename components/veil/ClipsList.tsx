@@ -125,7 +125,7 @@ function ClipRow({ clip }: { clip: ClipSummary }) {
           >
             <TriangleAlert className="size-3.5" aria-hidden />
             {hasAlerts
-              ? `${pluralize(clip.eventsFlagged, "alert")} to review`
+              ? `${pluralize(clip.eventsFlagged, "alert")} flagged`
               : "No alerts"}
           </span>
         </div>

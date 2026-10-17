@@ -67,7 +67,7 @@ export function LearningDashboard() {
               {chartTitle(stats.history)}
             </h2>
             <p className="text-sm text-zinc-500">
-              Share of reviewed alerts marked false alarm, all sites, by day
+              Running share of reviewed alerts marked false alarm, all sites
             </p>
           </div>
           {stats.history.length > 0 ? (
@@ -137,7 +137,7 @@ function StatTiles({ stats }: { stats: LearningStats }) {
         </dd>
       </div>
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-        <dt className="text-sm text-zinc-400">False-alarm rate today</dt>
+        <dt className="text-sm text-zinc-400">False-alarm rate so far</dt>
         <dd className="mt-1 text-4xl font-semibold tracking-tight text-white">
           {last ? formatPercent(last.falseAlarmRate) : "None yet"}
         </dd>

@@ -1,6 +1,5 @@
 // The one place screens get data from. Every method mirrors a Tab B route and
-// returns a shape from lib/contracts.ts. Today it is backed by the in-memory
-// mock; C9 swaps in HTTP calls one method at a time.
+// returns a shape from lib/contracts.ts, parsed from the real response.
 import type {
   AnalyzeResponse,
   AuditEntry,
@@ -16,7 +15,7 @@ import type {
   VerifyRequest,
   VerifyResponse,
 } from "../../lib/contracts";
-import { mockBackend } from "./mockBackend";
+import { httpBackend } from "./httpBackend";
 
 export { VeilApiError, friendlyErrorMessage } from "./errors";
 
@@ -41,4 +40,4 @@ export interface VeilApi {
   ) => Promise<VerifyResponse>;
 }
 
-export const veilApi: VeilApi = mockBackend;
+export const veilApi: VeilApi = httpBackend;

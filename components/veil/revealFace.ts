@@ -15,7 +15,7 @@ function bytesToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-/** MIME type from magic bytes. Real crops are JPEG; the mock vault seals an SVG. */
+/** MIME type from magic bytes. Tab A seals JPEG crops; PNG and SVG are recognized too. */
 export function sniffImageType(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer.slice(0, 8));
   if (bytes[0] === 0xff && bytes[1] === 0xd8) return "image/jpeg";

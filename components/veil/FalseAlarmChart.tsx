@@ -131,7 +131,7 @@ export function FalseAlarmChart({ history }: { history: HistoryPoint[] }) {
 
       {view === "table" ? (
         <table className="w-full text-left text-sm">
-          <caption className="sr-only">False-alarm rate by day</caption>
+          <caption className="sr-only">Running false-alarm rate by day</caption>
           <thead>
             <tr className="border-b border-zinc-800 text-xs text-zinc-500">
               <th scope="col" className="py-2 font-medium">
@@ -158,7 +158,7 @@ export function FalseAlarmChart({ history }: { history: HistoryPoint[] }) {
           ref={containerRef}
           tabIndex={0}
           role="img"
-          aria-label={`False-alarm rate by day, from ${formatPercent(history[0]?.falseAlarmRate ?? 0)} on ${history[0] ? formatDay(history[0].date) : ""} to ${formatPercent(last?.falseAlarmRate ?? 0)} on ${last ? formatDay(last.date) : ""}. Use the arrow keys to read each day.`}
+          aria-label={`Running false-alarm rate by day, from ${formatPercent(history[0]?.falseAlarmRate ?? 0)} on ${history[0] ? formatDay(history[0].date) : ""} to ${formatPercent(last?.falseAlarmRate ?? 0)} on ${last ? formatDay(last.date) : ""}. Use the arrow keys to read each day.`}
           onKeyDown={handleKeyDown}
           onFocus={() => setActiveIndex(history.length - 1)}
           onBlur={() => setActiveIndex(null)}

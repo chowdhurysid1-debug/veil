@@ -11,6 +11,15 @@ One line per finished milestone: id, what shipped, commit hash.
 - C6: unlock dialog (reason category + 15-char written reason, warning copy, audit-first), face decrypted in the browser with `decryptFace` and shown for 30 s then re-locked; locked-faces list and clickable face boxes on the clip view; /audit timeline. df381a2
 - C7: /verify: pick a stamped clip (or arrive from the clip page), drop the file, hash it in the browser with `sha256File`, big Intact / Tampered verdict with the stamp time and both hash prefixes. 7c787c5
 - C8: landing page at / (replaces the template summarize demo): hero with a product mockup, the three SPEC.md figures each linked to its source, the "forgets faces" line, five-step how it works, CTA into /clips/new, footer with sources; scroll-aware nav. 584718b
+- C9 (clips): merged main (backend B1 to B9). `httpBackend` fetches every Tab B route and parses each response with `lib/contracts.ts`; server `{ error }` sentences are shown as-is, anything else gets the generic message. Clips list, upload (posts `DEMO_SITE_ID`), and clip view now run on the real API; checked end to end with a real upload (17 faces locked, signed frame URLs render). 79da413
+- C9 (review + learning): Real / False alarm labels post to `/api/events/:id/feedback` after the undo window, and the clip view's learning card and /learning read `/api/learning/stats`. Copy now says the trend is a running rate, matching the backend's cumulative `history`. Checked with a synthetic trash-can fire clip labeled Real (fire threshold 0.47 to 0.46; no fall labels added). a36fe2b
+- C9 (vault + audit): the unlock dialog posts to `/api/faces/:id/unlock`, fetches the 30 s signed ciphertext link from Supabase storage, and decrypts it in the browser with `decryptFace`; /audit reads `/api/audit`. Checked by unlocking a face on a painting test clip: the audit entry landed before the key, and the decrypted crop showed and re-locked. 2c7ae4c
+- C9 (verify): /verify posts the browser's `sha256File` hash to `/api/clips/:id/verify`; the original test file reads Intact and a one-byte edit reads Tampered. `veilApi` is now `httpBackend` everywhere and the in-memory mock backend is deleted (`lib/mock.ts` stays for the landing mockup and test fixtures). a57dac2, 36e975a
+
+## Found during C9
+
+- **Test data in Supabase.** End-to-end checks left two uploads (`c9-face-test.mp4`, 17 faces; `c9-fire-test.mp4`, one fire alert), one Real label on that fire alert (fire threshold 0.47 to 0.46, labels 20 to 21), and one audit entry (reason category Other). No fall labels were added, so the demo's fall threshold is still 0.58. Delete these rows before the demo if the clips list and audit log should start empty.
+- **Model output leaks into descriptions (Tab B).** The fire test event's description ended with `}]}</parameter>|>{`. It passed `analyzeOutputSchema` because the schema only bounds length. The UI shows descriptions as plain text, so it is safe, but it reads badly on screen. Worth trimming trailing markup in the analyzer.
 
 ## Contract requests
 
