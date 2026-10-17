@@ -1,0 +1,9 @@
+# Never upload secrets, other tabs' worktrees (each holds a copy of .env.local),
+# build output, or browser-test artifacts to Vercel.
+.env*
+!.env.example
+.claude
+.playwright-mcp
+.next
+node_modules
+coverage
