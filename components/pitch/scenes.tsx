@@ -740,8 +740,8 @@ const TERMINAL_SCRIPT: { kind: "command" | "output" | "pass"; text: string }[] =
       kind: "output",
       text: "PASS  lib/server/handlers/verify.test.ts      6 tests",
     },
-    { kind: "output", text: "Test Files  33 passed (33)" },
-    { kind: "pass", text: "Tests  251 passed (251)" },
+    { kind: "output", text: "Test Files  34 passed (34)" },
+    { kind: "pass", text: "Tests  264 passed (264)" },
   ];
 const TYPE_MS = 45;
 const OUTPUT_MS = 140;

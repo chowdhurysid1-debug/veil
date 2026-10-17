@@ -19,6 +19,11 @@ import { cn } from "cn";
 
 import { buttonVariants } from "@/components/ui/button";
 import { CountUp } from "@/components/veil/CountUp";
+import {
+  CURVE_SUMMARY,
+  MeasuredCurve,
+  armById,
+} from "@/components/veil/MeasuredCurve";
 import { EASE_VEIL } from "@/components/veil/motion";
 
 import { Headline, Reveal } from "./motion";
@@ -63,7 +68,7 @@ const TEAM = [
 
 // From the repo on 2026-10-17: npm test and public/demo.
 const BUILD_STATS = [
-  { value: 251, label: "Tests passing" },
+  { value: 264, label: "Tests passing" },
   { value: 33, label: "Test files" },
   { value: 7, label: "Real sample clips" },
 ] as const;
@@ -133,6 +138,19 @@ const WHY_NOW: {
     icon: ScanEye,
   },
 ];
+
+// Every number on the learning slide comes from evals/results/learning-curve-summary.json.
+function curveEnds(id: Parameters<typeof armById>[0]) {
+  const points = armById(id).points;
+  const last = points.at(-1);
+  return {
+    first: points[0]?.falseAlarms.mean ?? 0,
+    last: last?.falseAlarms.mean ?? 0,
+    caught: last?.caught.min ?? 0,
+  };
+}
+const CURVE_ONE_SITE = curveEnds("one-site");
+const CURVE_STORE_ONLY = curveEnds("store-only");
 
 const RISKS = [
   {
@@ -463,13 +481,69 @@ export const SLIDES: PitchSlide[] = [
     ),
   },
   {
+    id: "learning-curve",
+    job: "Learning",
+    why: "Proves the product gets better with use, and better for everyone as sites join.",
+    seconds: 25,
+    say: [
+      "Here is the cost of privacy: blur every face and the AI cannot tell a hug from a fight. So on day one it flags both.",
+      `We measured what happens next: ${CURVE_SUMMARY.testClips} test clips, four weeks of officer labels, ${CURVE_SUMMARY.runs} runs on the real model.`,
+      `One school: ${CURVE_ONE_SITE.first} false alarms on day one, ${CURVE_ONE_SITE.last} by week four. ${CURVE_ONE_SITE.caught} of ${CURVE_SUMMARY.realTestEvents} real incidents still caught.`,
+      `A school that never labeled anything, learning only from a store, also drops from ${CURVE_STORE_ONLY.first} to ${CURVE_STORE_ONLY.last}. Every customer makes it better for the next one.`,
+    ],
+    question: {
+      ask: "Is that real video?",
+      answer:
+        "No. Written frame descriptions, frozen before the first run. The first pilot gives us labeled video to rerun it on. One more thing we found: pooling both sites crept back up in week four, likely because the AI only sees the newest few false alarms per type. The fix is keeping more.",
+    },
+    Content: () => (
+      <SlideFrame
+        kicker="07 / Measured"
+        title="Blurred faces cost accuracy. Labels win it back."
+        titleClassName="max-w-[26ch]"
+      >
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-14">
+          <Reveal order={1}>
+            <MeasuredCurve arms={["one-site", "store-only"]} />
+          </Reveal>
+          <Reveal order={2} className="flex flex-col">
+            {[
+              {
+                value: `${CURVE_ONE_SITE.first} to ${CURVE_ONE_SITE.last}`,
+                label: "False alarms, day 1 to week 4",
+              },
+              {
+                value: `${CURVE_ONE_SITE.caught} of ${CURVE_SUMMARY.realTestEvents}`,
+                label: "Real incidents still caught",
+              },
+              {
+                value: `${CURVE_STORE_ONLY.first} to ${CURVE_STORE_ONLY.last}`,
+                label: "New school, taught only by a store",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="flex items-baseline justify-between gap-4 border-b border-hairline py-4 first:border-t"
+              >
+                <span className="font-display text-4xl font-bold tracking-tight text-ink tabular-nums md:text-5xl">
+                  {stat.value}
+                </span>
+                <span className="label-mono text-right">{stat.label}</span>
+              </div>
+            ))}
+          </Reveal>
+        </div>
+      </SlideFrame>
+    ),
+  },
+  {
     id: "proof",
     job: "Proof",
     why: "Numbers you measured beat adjectives every time.",
     seconds: 20,
     say: [
       "This is our real test output.",
-      "251 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math, tamper checks.",
+      "264 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math and learning curve, tamper checks.",
       "19 of 19 eval cases pass against the real model, covering every demo clip plus look-alikes.",
     ],
     question: {
@@ -478,14 +552,14 @@ export const SLIDES: PitchSlide[] = [
         "We do not know yet, and we will not guess. The evals prove the demo path. A labeled video set from the first pilot measures real accuracy.",
     },
     Content: () => (
-      <SlideFrame kicker="07 / Proof" title="Tested, not just demoed.">
+      <SlideFrame kicker="08 / Proof" title="Tested, not just demoed.">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-14">
           <Reveal order={1}>
             <Terminal />
           </Reveal>
           <Reveal order={2} className="flex flex-col">
             {[
-              { value: 251, label: "Tests passing" },
+              { value: 264, label: "Tests passing" },
               { value: 19, label: "Of 19 eval cases passed" },
               { value: 7, label: "Real clips with actors" },
             ].map((stat) => (
@@ -524,7 +598,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="08 / Why now"
+        kicker="09 / Why now"
         title="Regulators moved. The models caught up."
       >
         <div className="relative">
@@ -590,7 +664,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="09 / Market"
+        kicker="10 / Market"
         title="Schools first. Every camera next."
       >
         <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-2 lg:gap-16">
@@ -650,7 +724,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="10 / Competition"
+        kicker="11 / Competition"
         title="They blur the screen. We blur the file."
       >
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16">
@@ -686,7 +760,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="11 / Business model"
+        kicker="12 / Business model"
         title="Software on the cameras they already own."
       >
         <Reveal order={1}>
@@ -728,7 +802,7 @@ export const SLIDES: PitchSlide[] = [
         "Trust. A privacy product has to survive an audit, so key handling and login ship before any real footage.",
     },
     Content: () => (
-      <SlideFrame kicker="12 / Risks" title="What we know is not done.">
+      <SlideFrame kicker="13 / Risks" title="What we know is not done.">
         <ul className="grid grid-cols-1 border-t border-l border-hairline sm:grid-cols-2 lg:grid-cols-5">
           {RISKS.map(({ icon: RiskIcon, risk, plan }, index) => (
             <li key={risk} className="border-r border-b border-hairline">
@@ -767,7 +841,7 @@ export const SLIDES: PitchSlide[] = [
     ],
     Content: () => (
       <SlideFrame
-        kicker="13 / Team"
+        kicker="14 / Team"
         title="Built at this hackathon, end to end."
       >
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -827,7 +901,7 @@ export const SLIDES: PitchSlide[] = [
     Content: () => (
       <div className="mx-auto grid min-h-full w-full max-w-7xl grid-cols-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
         <div className="flex flex-col gap-8">
-          <Kicker text="14 / The ask" />
+          <Kicker text="15 / The ask" />
           <Headline
             size="display"
             text="Cameras that forget faces."
