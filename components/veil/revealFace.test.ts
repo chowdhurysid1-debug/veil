@@ -12,7 +12,7 @@ describe("sniffImageType", () => {
     expect(sniffImageType(bytes(0x89, 0x50, 0x4e, 0x47))).toBe("image/png");
   });
 
-  it("recognizes the mock vault's SVG", () => {
+  it("recognizes an SVG", () => {
     const svg = new TextEncoder().encode('<svg xmlns="x"></svg>').buffer;
     expect(sniffImageType(svg)).toBe("image/svg+xml");
   });
