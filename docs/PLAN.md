@@ -24,7 +24,7 @@ Rules for every tab:
 
 ```
 video file
-  -> [A] extract frames (1 fps, max 30) in the browser
+  -> [A] extract frames (1 fps, max 20, 640px wide) in the browser
   -> [A] detect faces (MediaPipe) -> blur on canvas
   -> [A] crop each face -> AES-GCM encrypt in browser (Web Crypto) -> ciphertext + key
   -> [A] SHA-256 of original file + each blurred frame
@@ -57,7 +57,7 @@ Storage: two private buckets, `frames` (blurred JPEGs) and `vault` (encrypted fa
 
 | #   | Milestone                                                                                                             | Done when                                                                                 |
 | --- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| A1  | Frame extraction: `<video>` + canvas, 1 fps, max 30 frames, JPEG blobs                                                | Vitest unit test for the sampling math; manual check on a 30 s clip                       |
+| A1  | Frame extraction: `<video>` + canvas, 1 fps, max 20 frames at 640px wide (keeps the upload under Vercel's request limit), JPEG blobs                                                | Vitest unit test for the sampling math; manual check on a 30 s clip                       |
 | A2  | Face detection with `@mediapipe/tasks-vision` (model loaded once, cached)                                             | Returns bounding boxes per frame; fallback to "no faces found" if the model fails to load |
 | A3  | Blur: Gaussian blur over each box with 20% padding, applied to every frame before anything leaves the browser         | Visual check; test that output frame differs only inside boxes                            |
 | A4  | Face vault crypto: crop each face, AES-GCM 256 with a fresh key per face, export raw key                              | Round-trip test: encrypt then decrypt returns identical bytes                             |
@@ -105,8 +105,10 @@ Follow the global design rules: dark zinc base, one indigo accent, Inter, Lucide
 
 ## Human decisions (stop and ask the user)
 
-- Approve the database schema above before B1.
-- Approve the packages: `@mediapipe/tasks-vision@1.1.0` (about 5.6M weekly downloads, published 2026-10-06) and `framer-motion@14.0.0` (about 51M weekly downloads, published 2026-10-02).
+- Supabase project: not set up yet (2026-10-16). Tab B builds B2 to B9 against mocked clients first and runs B1 only after the user confirms the keys are in `.env.local`. Migrations are applied by pasting the SQL into the Supabase dashboard SQL editor; do not install the Supabase CLI without asking.
+
+- ~~Approve the database schema~~ Approved 2026-10-16.
+- ~~Approve the packages~~ Approved and installed 2026-10-16: `@mediapipe/tasks-vision@1.1.0`, `framer-motion@14.0.0`.
 - Add to `.env.local` yourself: `SUPABASE_SECRET_KEY`, `VEIL_SIGNING_SECRET`, `VEIL_VAULT_KEY` (any long random strings for the last two).
 - Pick the demo clips. Use clips you have rights to, or record your own with your team as actors. No real students.
 - Any change to the demo path in `SPEC.md`.

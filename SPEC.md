@@ -31,7 +31,7 @@ A school safety officer reviewing camera alerts. They need to know when somethin
 
 ## What the AI does
 
-- **Input:** 3 to 30 blurred JPEG frames from one clip, plus few-shot examples of past human labels (real and false alarm) for the same event types across all sites.
+- **Input:** 3 to 20 blurred JPEG frames, 640px wide from one clip, plus few-shot examples of past human labels (real and false alarm) for the same event types across all sites.
 - **Output (Zod, `lib/contracts.ts`):** `{ events: [{ frameIndex, type: "fall" | "fight" | "theft" | "fire" | "other", confidence: 0..1, description }] }`, max 10 events.
 - **Learning:** few-shot examples retrieved from the `feedback` table, plus a per-type confidence threshold calibrated from each type's false-alarm rate. Both are visible in the learning panel.
 - **Fallback:** if the call fails or the output does not parse, the clip is still stored and blurred, and the timeline shows "Analysis unavailable, review manually". No raw error reaches the UI.
