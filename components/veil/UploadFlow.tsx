@@ -28,6 +28,7 @@ import type {
   ProcessedFrame,
 } from "@/lib/contracts";
 import { MOCK_SITES } from "@/lib/mock";
+import { processClip } from "@/lib/video";
 
 import { veilApi } from "./api";
 import { CountUp } from "./CountUp";
@@ -39,7 +40,6 @@ import {
   pluralize,
 } from "./format";
 import { FrameImage, frameDataUrl } from "./FrameImage";
-import { processClip, rejectFile } from "./pipeline";
 
 const DEMO_SITE_ID = MOCK_SITES[0].id;
 
@@ -79,7 +79,7 @@ const PIPELINE_STEP_INDEX: Record<PipelineProgress["step"], number> = {
 };
 
 type Phase =
-  | { kind: "idle"; rejection: string | null }
+  | { kind: "idle" }
   | {
       kind: "running";
       file: File;
@@ -106,15 +106,9 @@ type Phase =
     };
 
 export function UploadFlow() {
-  const [phase, setPhase] = useState<Phase>({ kind: "idle", rejection: null });
+  const [phase, setPhase] = useState<Phase>({ kind: "idle" });
 
   async function run(file: File) {
-    const rejection = rejectFile(file);
-    if (rejection) {
-      setPhase({ kind: "idle", rejection });
-      return;
-    }
-
     let activeStep = 0;
     let facesLocked: number | null = null;
     setPhase({
@@ -190,12 +184,12 @@ export function UploadFlow() {
   }
 
   function reset() {
-    setPhase({ kind: "idle", rejection: null });
+    setPhase({ kind: "idle" });
   }
 
   if (phase.kind === "idle") {
     return (
-      <DropZone rejection={phase.rejection} onFile={(file) => void run(file)} />
+      <DropZone onFile={(file) => void run(file)} />
     );
   }
 
@@ -269,13 +263,7 @@ export function UploadFlow() {
   );
 }
 
-function DropZone({
-  rejection,
-  onFile,
-}: {
-  rejection: string | null;
-  onFile: (file: File) => void;
-}) {
+function DropZone({ onFile }: { onFile: (file: File) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -320,7 +308,7 @@ function DropZone({
             <span className="font-medium text-indigo-300 underline-offset-4 group-hover:underline">
               choose a video file
             </span>
-            . MP4, MOV, or WebM up to 200 MB.
+            . MP4, MOV, or WebM, up to 5 minutes.
           </span>
         </div>
       </button>
@@ -337,16 +325,6 @@ function DropZone({
           if (file) onFile(file);
         }}
       />
-
-      {rejection && (
-        <p
-          role="alert"
-          className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-200"
-        >
-          <CircleAlert className="size-4 shrink-0 text-rose-400" aria-hidden />
-          {rejection}
-        </p>
-      )}
 
       <ul className="grid gap-3 sm:grid-cols-3">
         {[

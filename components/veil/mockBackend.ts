@@ -150,7 +150,7 @@ function delay(ms: number) {
 }
 
 /** The scenario the next upload gets, so the mock pipeline draws matching frames. */
-export function peekNextMockScenario(): MockScenario {
+function peekNextMockScenario(): MockScenario {
   return MOCK_SCENARIOS[db.uploads % MOCK_SCENARIOS.length];
 }
 
