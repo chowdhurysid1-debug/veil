@@ -14,6 +14,7 @@ One line per finished milestone: id, what shipped, commit hash.
 
 - No authentication on any route, by design: the SPEC scopes out real login and uses one hardcoded demo identity. Anyone with the deployed URL can upload clips and unlock faces (each unlock is still written to the audit log first). Before sharing a public URL, turn on Vercel Deployment Protection or add Supabase auth.
 - The original video never reaches the server, so `originalSha256` is computed in the browser. The HMAC stamp pins that hash to the server's own `stampedAt` time; it cannot prove the browser hashed the true original.
+- Learning is pooled across sites, as the SPEC promises, so one site that marks many false alarms raises the threshold for every site, fire included. Product call for later: cap how far other sites can move a threshold, or give fire a lower ceiling. The model prompt carries other sites' event descriptions and officer notes (fenced as data, 200 characters max) but never their site names.
 
 ## Milestones
 
@@ -23,3 +24,5 @@ One line per finished milestone: id, what shipped, commit hash.
 - B3 fix: stamp now signs the server's `stampedAt` too; request bodies are read as a stream and cut off past the limit; malformed Content-Length rejected; 5 tests (1a9711b)
 - B4: `POST /api/clips/:id/analyze` sends only blurred frames to claude-sonnet-5-5 (max 1200 output tokens, 45 s timeout), parses with `analyzeOutputSchema`, drops events on frames never sent, falls back on model, parse, frame-load, or daily-cap (100/day) failure, and returns stored events on repeat calls; `GET /api/clips/:id` returns signed frame URLs, events, face boxes, no key material; 21 tests plus one real image call that parsed cleanly (a6c0442)
 - B5: per-type threshold = 0.4 + 0.5 x smoothed false-alarm rate, prior 1 false alarm in 5 labels (seed gives fall 0.58, fight 0.50, theft 0.51, fire 0.47; the demo's shoe-tying false alarm moves fall to 0.60); few-shot sends the newest 3 false alarms and 2 real labels per type from every site; every event is stored, `flagged` only at or above its type's threshold; concurrent analyze calls share one model call; 16 tests (74a80de)
+- B5 fix: few-shot examples no longer carry site names (232501f)
+- B6: `POST /api/events/:id/feedback` (label `real` or `false_alarm`, optional note; labeling again replaces the label, so undo = send the other label) returns the updated `LearningStats`; `GET /api/learning/stats` returns totals, all five types with raw false-alarm rate and threshold, newest 10 labels, and `history` as the cumulative false-alarm rate per UTC day (one new label nudges the line rather than spiking a day); includes a test of demo steps 1 to 4 through the real handlers; 16 tests (1810231)
