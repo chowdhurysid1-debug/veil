@@ -244,6 +244,7 @@ export const MOCK_CLIP_DETAIL: ClipDetail = {
     id: `9b1c3d5e-6f7a-4b8c-9d0e-${String(index).padStart(12, "0")}`,
     ...face,
   })),
+  videoUrl: null,
 };
 
 export const MOCK_ANALYZE_RESPONSE: AnalyzeResponse = {

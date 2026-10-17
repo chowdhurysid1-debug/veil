@@ -80,4 +80,33 @@ describe("httpBackend", () => {
     const error = await httpBackend.listClips().catch((caught) => caught);
     expect(error).not.toBeInstanceOf(VeilApiError);
   });
+
+  it("PUTs the blurred video to the signed URL without overwriting", async () => {
+    const fetchMock = stubFetch(new Response("{}", { status: 200 }));
+    const video = new Blob([new Uint8Array([0, 0, 0, 24])], {
+      type: "video/mp4",
+    });
+    await httpBackend.uploadVideo("https://storage.test/upload?token=t", video);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://storage.test/upload?token=t",
+      expect.objectContaining({
+        method: "PUT",
+        headers: { "Content-Type": "video/mp4", "x-upsert": "false" },
+        body: video,
+      }),
+    );
+  });
+
+  it("says the frames are safe when the video upload is refused", async () => {
+    stubFetch(new Response("{}", { status: 400 }));
+    await expect(
+      httpBackend.uploadVideo(
+        "https://storage.test/upload?token=t",
+        new Blob([], { type: "video/mp4" }),
+      ),
+    ).rejects.toThrow(
+      "The blurred video did not upload. The blurred frames are saved.",
+    );
+  });
 });

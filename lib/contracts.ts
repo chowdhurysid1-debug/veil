@@ -158,7 +158,12 @@ export const clipDetailSchema = clipSummarySchema.extend({
   frames: z.array(clipFrameSchema),
   events: z.array(clipEventSchema),
   faces: z.array(lockedFaceSummarySchema),
+  // Every frame of the clip with every head blurred. Null when the browser could not render one.
+  videoUrl: z.url().nullable(),
 });
+
+// The browser PUTs the blurred MP4 it rendered straight to storage with this one-time URL.
+export const videoUploadResponseSchema = z.object({ uploadUrl: z.url() });
 
 // ---------- API: learning ----------
 
@@ -263,6 +268,7 @@ export type AnalyzeResponse = z.infer<typeof analyzeResponseSchema>;
 export type ClipSummary = z.infer<typeof clipSummarySchema>;
 export type ClipFrame = z.infer<typeof clipFrameSchema>;
 export type ClipDetail = z.infer<typeof clipDetailSchema>;
+export type VideoUploadResponse = z.infer<typeof videoUploadResponseSchema>;
 export type LearningStats = z.infer<typeof learningStatsSchema>;
 export type FeedbackRequest = z.infer<typeof feedbackRequestSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;

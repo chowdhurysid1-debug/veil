@@ -1,9 +1,12 @@
 export const FRAMES_BUCKET = "frames";
 export const VAULT_BUCKET = "vault";
-export type Bucket = typeof FRAMES_BUCKET | typeof VAULT_BUCKET;
+export const VIDEOS_BUCKET = "videos";
+export type Bucket =
+  typeof FRAMES_BUCKET | typeof VAULT_BUCKET | typeof VIDEOS_BUCKET;
 
 export const FRAME_URL_TTL_SECONDS = 600;
 export const FACE_URL_TTL_SECONDS = 30;
+export const VIDEO_URL_TTL_SECONDS = 600;
 
 export const JPEG_CONTENT_TYPE = "image/jpeg";
 export const CIPHERTEXT_CONTENT_TYPE = "application/octet-stream";
@@ -14,6 +17,11 @@ export function framePath(clipId: string, frameIndex: number): string {
 
 export function vaultPath(clipId: string, faceId: string): string {
   return `${clipId}/${faceId}.bin`;
+}
+
+// One blurred video per clip, so the path alone says whether a clip has one.
+export function videoPath(clipId: string): string {
+  return `${clipId}.mp4`;
 }
 
 export interface BlobStore {
@@ -31,6 +39,14 @@ export interface BlobStore {
     expiresInSeconds: number,
   ): Promise<string[]>;
   remove(bucket: Bucket, paths: string[]): Promise<void>;
+  // A one-time URL the browser can PUT one new object to. It cannot overwrite.
+  signedUploadUrl(bucket: Bucket, path: string): Promise<string>;
+  // Null when the object does not exist.
+  signedUrlIfExists(
+    bucket: Bucket,
+    path: string,
+    expiresInSeconds: number,
+  ): Promise<string | null>;
 }
 
 export class StorageError extends Error {
@@ -67,8 +83,25 @@ export interface StorageApi {
       error: ApiError | null;
     }>;
     remove(paths: string[]): PromiseLike<{ error: ApiError | null }>;
+    createSignedUploadUrl(
+      path: string,
+      options: { upsert: boolean },
+    ): PromiseLike<{
+      data: { signedUrl: string } | null;
+      error: ApiError | null;
+    }>;
+    createSignedUrl(
+      path: string,
+      expiresIn: number,
+    ): PromiseLike<{
+      data: { signedUrl: string } | null;
+      error: ApiError | null;
+    }>;
   };
 }
+
+// Only a missing object means "no video yet". A missing bucket is a setup error.
+const OBJECT_NOT_FOUND = /^object not found/i;
 
 export function createSupabaseBlobStore(storage: StorageApi): BlobStore {
   return {
@@ -124,6 +157,31 @@ export function createSupabaseBlobStore(storage: StorageApi): BlobStore {
           `Removing ${paths.length} objects from ${bucket} failed: ${error.message}`,
         );
       }
+    },
+
+    async signedUploadUrl(bucket, path) {
+      const { data, error } = await storage
+        .from(bucket)
+        .createSignedUploadUrl(path, { upsert: false });
+      if (error || !data) {
+        throw new StorageError(
+          `Signing an upload to ${bucket}/${path} failed: ${error?.message ?? "no data"}`,
+        );
+      }
+      return data.signedUrl;
+    },
+
+    async signedUrlIfExists(bucket, path, expiresInSeconds) {
+      const { data, error } = await storage
+        .from(bucket)
+        .createSignedUrl(path, expiresInSeconds);
+      if (error && OBJECT_NOT_FOUND.test(error.message)) return null;
+      if (error || !data) {
+        throw new StorageError(
+          `Signing ${bucket}/${path} failed: ${error?.message ?? "no data"}`,
+        );
+      }
+      return data.signedUrl;
     },
   };
 }

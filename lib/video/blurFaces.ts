@@ -48,18 +48,9 @@ export function blurHeads(
       smearCanvas.height,
     );
 
+    // The whole padded rectangle, not an ellipse inside it: a merged box can
+    // hold a second head in its corner.
     ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(
-      px.x + px.w / 2,
-      px.y + px.h / 2,
-      px.w / 2,
-      px.h / 2,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.clip();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(smearCanvas, px.x, px.y, px.w, px.h);

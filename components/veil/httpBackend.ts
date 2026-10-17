@@ -14,6 +14,7 @@ import {
   learningStatsSchema,
   unlockResponseSchema,
   verifyResponseSchema,
+  videoUploadResponseSchema,
 } from "../../lib/contracts";
 import type { VeilApi } from "./api";
 import { VeilApiError } from "./errors";
@@ -23,6 +24,8 @@ const OFFLINE_MESSAGE =
 // Vercel answers oversized bodies itself, without the route's JSON error.
 const TOO_LARGE_MESSAGE =
   "This clip is too large to upload. Try a shorter clip.";
+const VIDEO_UPLOAD_MESSAGE =
+  "The blurred video did not upload. The blurred frames are saved.";
 
 interface RequestOptions {
   method?: "GET" | "POST";
@@ -108,4 +111,23 @@ export const httpBackend: VeilApi = {
       method: "POST",
       body,
     }),
+
+  createVideoUpload: (clipId) =>
+    request(`/api/clips/${segment(clipId)}/video`, videoUploadResponseSchema, {
+      method: "POST",
+    }),
+
+  uploadVideo: async (uploadUrl, video) => {
+    let response: Response;
+    try {
+      response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": video.type, "x-upsert": "false" },
+        body: video,
+      });
+    } catch {
+      throw new VeilApiError(OFFLINE_MESSAGE);
+    }
+    if (!response.ok) throw new VeilApiError(VIDEO_UPLOAD_MESSAGE);
+  },
 };

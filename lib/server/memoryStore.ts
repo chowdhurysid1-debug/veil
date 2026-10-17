@@ -295,5 +295,17 @@ export function createMemoryBlobStore(): BlobStore & {
     async remove(bucket, paths) {
       for (const path of paths) objects.delete(key(bucket, path));
     },
+
+    async signedUploadUrl(bucket, path) {
+      if (objects.has(key(bucket, path))) {
+        throw new StorageError(`${key(bucket, path)} already exists`);
+      }
+      return `https://storage.test/upload/${bucket}/${path}?token=test`;
+    },
+
+    async signedUrlIfExists(bucket, path, expiresInSeconds) {
+      if (!objects.has(key(bucket, path))) return null;
+      return `https://storage.test/${bucket}/${path}?expires=${expiresInSeconds}`;
+    },
   };
 }

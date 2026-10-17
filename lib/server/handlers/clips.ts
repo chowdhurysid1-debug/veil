@@ -3,6 +3,7 @@ import {
   type ClipDetail,
   type CreateClipRequest,
   type CreateClipResponse,
+  type VideoUploadResponse,
 } from "../../contracts";
 import { learnedThresholds } from "../../learning/thresholds";
 import { decodeBase64, isJpeg, sha256Hex } from "../bytes";
@@ -27,6 +28,9 @@ import {
   mapWithConcurrency,
   VAULT_BUCKET,
   vaultPath,
+  VIDEO_URL_TTL_SECONDS,
+  VIDEOS_BUCKET,
+  videoPath,
   type BlobStore,
   type Bucket,
 } from "../storage";
@@ -34,6 +38,8 @@ import type { FrameRecord, NewFace } from "../store";
 import { FACE_KEY_BYTES, wrapKey } from "../vault";
 
 export const CLIP_LIST_LIMIT = 50;
+// The blurred video is rendered right after stamping. Later uploads are refused.
+export const VIDEO_UPLOAD_WINDOW_MS = 15 * 60 * 1000;
 const UPLOAD_CONCURRENCY = 6;
 const AES_GCM_IV_BYTES = 12;
 const AES_GCM_TAG_BYTES = 16;
@@ -257,11 +263,16 @@ export async function getClipDetail(
     return errorResponse(404, "We could not find that clip.");
   }
 
-  const [frames, events, faces, labels] = await Promise.all([
+  const [frames, events, faces, labels, videoUrl] = await Promise.all([
     deps.store.listFrames(clipId),
     deps.store.listEvents(clipId),
     deps.store.listFaces(clipId),
     deps.store.listLabels(),
+    deps.blobs.signedUrlIfExists(
+      VIDEOS_BUCKET,
+      videoPath(clipId),
+      VIDEO_URL_TTL_SECONDS,
+    ),
   ]);
   const urls = await deps.blobs.signedUrls(
     FRAMES_BUCKET,
@@ -289,6 +300,45 @@ export async function getClipDetail(
       frameIndex: face.frameIndex,
       bbox: face.bbox,
     })),
+    videoUrl,
   };
   return json(body);
+}
+
+// A one-time upload URL for the clip's blurred video. The browser renders it
+// from the original file, so the original never reaches the server.
+export async function createVideoUpload(
+  id: string,
+  deps: VeilDeps,
+): Promise<Response> {
+  const clipId = parseUuid(id);
+  const clip = clipId ? await deps.store.getClip(clipId) : null;
+  if (!clipId || !clip) {
+    return errorResponse(404, "We could not find that clip.");
+  }
+
+  const age = deps.now().getTime() - new Date(clip.stampedAt).getTime();
+  if (age > VIDEO_UPLOAD_WINDOW_MS) {
+    return errorResponse(
+      409,
+      "This clip was stamped too long ago to add a video. Upload it again.",
+    );
+  }
+
+  const existing = await deps.blobs.signedUrlIfExists(
+    VIDEOS_BUCKET,
+    videoPath(clipId),
+    VIDEO_URL_TTL_SECONDS,
+  );
+  if (existing) {
+    return errorResponse(409, "This clip already has its blurred video.");
+  }
+
+  const body: VideoUploadResponse = {
+    uploadUrl: await deps.blobs.signedUploadUrl(
+      VIDEOS_BUCKET,
+      videoPath(clipId),
+    ),
+  };
+  return json(body, 201);
 }
