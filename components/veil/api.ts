@@ -34,8 +34,6 @@ export interface VeilApi {
     faceId: string,
     request: UnlockRequest,
   ) => Promise<UnlockResponse>;
-  /** Turns an unlock response into an image URL the browser can show. */
-  revealFace: (unlock: UnlockResponse) => Promise<string>;
   listAudit: () => Promise<AuditEntry[]>;
   verifyClip: (
     clipId: string,

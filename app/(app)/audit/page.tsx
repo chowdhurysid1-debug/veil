@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { ScrollText } from "lucide-react";
 
+import { AuditLog } from "@/components/veil/AuditLog";
 import { PageContainer, PageHeader } from "@/components/veil/PageHeader";
-import { EmptyState } from "@/components/veil/States";
 
-export const metadata: Metadata = { title: "Audit log" };
+export const metadata: Metadata = {
+  title: "Audit log",
+  description: "Every face unlock: who, why, and when.",
+};
 
-export default function Page() {
+export default function AuditPage() {
   return (
     <PageContainer>
-      <PageHeader title="Audit log" description="Every face unlock, who did it, and why. Entries cannot be edited or deleted." />
-      <EmptyState
-        icon={ScrollText}
-        title="Nothing here yet"
-        description="This screen is being built next."
+      <PageHeader
+        title="Audit log"
+        description="Every face unlock, who did it, and why. The entry is written before the key is released, and Veil has no way to edit or remove one."
       />
+      <AuditLog />
     </PageContainer>
   );
 }

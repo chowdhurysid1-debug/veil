@@ -23,12 +23,14 @@ import {
   formatStampDateTime,
   pluralize,
 } from "./format";
-import { FramePlayer } from "./FramePlayer";
+import { FramePlayer, type LockedFaceSummary } from "./FramePlayer";
 import { recordLearnedLabel } from "./learningSession";
 import { LearningSummaryCard } from "./LearningSummaryCard";
+import { LockedFacesList } from "./LockedFacesList";
 import { ReviewControls } from "./ReviewControls";
 import { ErrorState } from "./States";
 import { useToast } from "./Toaster";
+import { UnlockFaceDialog } from "./UnlockFaceDialog";
 import { useVeilQuery } from "./useVeilQuery";
 
 type ClipUpdater = (update: (clip: ClipDetail) => ClipDetail) => void;
@@ -83,6 +85,14 @@ function ClipReview({
   );
   const currentFrameIndex = frames[currentIndex]?.frameIndex;
 
+  const [unlockFace, setUnlockFace] = useState<LockedFaceSummary | null>(null);
+  const [isUnlockOpen, setIsUnlockOpen] = useState(false);
+  function openUnlock(face: LockedFaceSummary) {
+    setCurrentIndex(indexOfFrame(face.frameIndex));
+    setUnlockFace(face);
+    setIsUnlockOpen(true);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <BackLink />
@@ -110,6 +120,7 @@ function ClipReview({
           faces={clip.faces}
           currentIndex={currentIndex}
           onSeek={setCurrentIndex}
+          onFaceSelect={openUnlock}
         />
 
         <div className="flex flex-col gap-4">
@@ -149,6 +160,11 @@ function ClipReview({
               );
             })
           )}
+          <LockedFacesList
+            faces={clip.faces}
+            frames={frames}
+            onSelect={openUnlock}
+          />
           {learning.state.status !== "error" && (
             <LearningSummaryCard
               stats={
@@ -159,6 +175,17 @@ function ClipReview({
           )}
         </div>
       </div>
+
+      <UnlockFaceDialog
+        face={unlockFace}
+        tSeconds={
+          unlockFace
+            ? (frames[indexOfFrame(unlockFace.frameIndex)]?.tSeconds ?? 0)
+            : 0
+        }
+        open={isUnlockOpen}
+        onOpenChange={setIsUnlockOpen}
+      />
     </div>
   );
 }

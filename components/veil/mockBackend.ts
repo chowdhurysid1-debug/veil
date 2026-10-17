@@ -20,9 +20,12 @@ import {
   MOCK_SCENARIOS,
   MOCK_SEED_ORIGINAL_SHA256,
   MOCK_SITES,
-  svgToDataUrl,
   type MockScenario,
 } from "../../lib/mock";
+import {
+  encryptFace,
+  type EncryptedFace,
+} from "../../lib/crypto/faceVault";
 import type { VeilApi } from "./api";
 import { VeilApiError } from "./errors";
 
@@ -131,6 +134,8 @@ interface MockDb {
   clips: StoredClip[];
   stats: LearningStats;
   audit: AuditEntry[];
+  /** Sealed face crops by face id, as Tab B's vault bucket would hold them. */
+  vault: Map<string, EncryptedFace>;
   uploads: number;
 }
 
@@ -144,8 +149,21 @@ const db: MockDb = {
   ],
   stats: structuredClone(MOCK_LEARNING_STATS),
   audit: structuredClone(MOCK_AUDIT),
+  vault: new Map(),
   uploads: 0,
 };
+
+/**
+ * Seeded demo faces have no real crop, so the mock seals a placeholder
+ * silhouette the first time one is unlocked. Uploaded clips use their real crops.
+ */
+async function sealPlaceholderFace(faceId: string): Promise<EncryptedFace> {
+  const sealed = await encryptFace(
+    new Blob([MOCK_FACE_SVG], { type: "image/svg+xml" }),
+  );
+  db.vault.set(faceId, sealed);
+  return sealed;
+}
 
 /** YYYY-MM-DD in the viewer's time zone, matching how the officer reads "today". */
 function localDay(date: Date) {
@@ -233,11 +251,15 @@ export const mockBackend: VeilApi = {
           blurredUrl: `data:${frameMimeType(frame.blurredJpegBase64)};base64,${frame.blurredJpegBase64}`,
         })),
         events: [],
-        faces: request.faces.map((face) => ({
-          id: crypto.randomUUID(),
-          frameIndex: face.frameIndex,
-          bbox: face.bbox,
-        })),
+        faces: request.faces.map((face) => {
+          const id = crypto.randomUUID();
+          db.vault.set(id, {
+            ciphertextBase64: face.ciphertextBase64,
+            ivBase64: face.ivBase64,
+            rawKeyBase64: face.rawKeyBase64,
+          });
+          return { id, frameIndex: face.frameIndex, bbox: face.bbox };
+        }),
       },
     });
     return {
@@ -341,19 +363,16 @@ export const mockBackend: VeilApi = {
       createdAt: new Date().toISOString(),
     };
     db.audit.unshift(entry);
+    const sealed = db.vault.get(faceId) ?? (await sealPlaceholderFace(faceId));
     return {
       faceId,
       auditId: entry.id,
-      rawKeyBase64: "bW9jay1rZXktbm90LXJlYWw=",
-      ivBase64: "bW9jay1pdg==",
-      ciphertextUrl: "https://example.com/mock-vault-object",
+      rawKeyBase64: sealed.rawKeyBase64,
+      ivBase64: sealed.ivBase64,
+      // Real vault objects are signed URLs to the raw ciphertext bytes.
+      ciphertextUrl: `data:application/octet-stream;base64,${sealed.ciphertextBase64}`,
       expiresAt: new Date(Date.now() + UNLOCK_SECONDS * 1000).toISOString(),
     };
-  },
-
-  async revealFace() {
-    await delay(300);
-    return svgToDataUrl(MOCK_FACE_SVG);
   },
 
   async listAudit() {
