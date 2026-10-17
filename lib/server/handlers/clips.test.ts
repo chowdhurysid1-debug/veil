@@ -264,6 +264,25 @@ describe("blurred video", () => {
     expect(after.videoUrl).toContain(`videos/${clipId}.mp4`);
   });
 
+  it("still shows the clip with stills when the video lookup fails", async () => {
+    const { deps, blobs } = makeDeps();
+    const { clipId } = await uploadClip(deps);
+    blobs.signedUrlIfExists = async () => {
+      throw new Error("Bucket not found");
+    };
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    const response = await getClipDetail(clipId, deps);
+    expect(response.status).toBe(200);
+    expect(
+      clipDetailSchema.parse(await readBody(response)).videoUrl,
+    ).toBeNull();
+    expect(consoleError).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
+  });
+
   it("refuses anyone without the token from the clip upload", async () => {
     const { deps } = makeDeps();
     const { clipId } = await uploadClip(deps);

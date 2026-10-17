@@ -275,11 +275,19 @@ export async function getClipDetail(
     deps.store.listEvents(clipId),
     deps.store.listFaces(clipId),
     deps.store.listLabels(),
-    deps.blobs.signedUrlIfExists(
-      VIDEOS_BUCKET,
-      videoPath(clipId),
-      VIDEO_URL_TTL_SECONDS,
-    ),
+    // A broken video lookup must not block review: the stills are enough.
+    deps.blobs
+      .signedUrlIfExists(
+        VIDEOS_BUCKET,
+        videoPath(clipId),
+        VIDEO_URL_TTL_SECONDS,
+      )
+      .catch((error: unknown) => {
+        console.error(
+          `[getClipDetail] video lookup failed, showing stills. ${describeError(error)}`,
+        );
+        return null;
+      }),
   ]);
   const urls = await deps.blobs.signedUrls(
     FRAMES_BUCKET,
