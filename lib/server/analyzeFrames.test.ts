@@ -6,8 +6,32 @@ import { ANALYZE_FALLBACK } from "../fallbacks";
 import {
   analyzeFrames,
   buildAnalyzeMessages,
+  cleanDescription,
   type AnalyzeInput,
 } from "./analyzeFrames";
+
+describe("cleanDescription", () => {
+  // Real model output on the collar-grab clip.
+  it("cuts JSON and markup the model ran on into", () => {
+    expect(
+      cleanDescription(
+        "One person holds another against a wall.}]}</br>I need to correct the JSON.{",
+      ),
+    ).toBe("One person holds another against a wall.");
+  });
+
+  it("leaves a clean description alone", () => {
+    expect(cleanDescription("A person tapes over the camera.")).toBe(
+      "A person tapes over the camera.",
+    );
+  });
+
+  it("never returns an empty description", () => {
+    expect(cleanDescription("}]}")).toBe(
+      "Activity in the frame needs a human look.",
+    );
+  });
+});
 
 const usage = {
   inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
@@ -74,6 +98,23 @@ describe("analyzeFrames", () => {
       model: mockModelReturning("I see a person falling in frame 1."),
     });
     expect(result).toEqual({ data: ANALYZE_FALLBACK, isFallback: true });
+  });
+
+  it("asks again once when the first answer does not parse", async () => {
+    const answers = [
+      '{"events": [{"frameIndex": 1, "type": "fa',
+      JSON.stringify({ events: [fall] }),
+    ];
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => ({
+        content: [{ type: "text", text: answers.shift() ?? "" }],
+        finishReason: { unified: "stop", raw: "end_turn" },
+        usage,
+        warnings: [],
+      }),
+    });
+    const result = await analyzeFrames(input, { model });
+    expect(result).toEqual({ data: { events: [fall] }, isFallback: false });
   });
 
   it("returns the fallback when the JSON has the wrong shape", async () => {
