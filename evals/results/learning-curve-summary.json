@@ -1,0 +1,453 @@
+{
+  "generatedAt": "2026-10-17T18:08:01.569Z",
+  "model": "claude-sonnet-5-5",
+  "commit": "eb6fe51",
+  "testClips": 16,
+  "harmlessTestClips": 8,
+  "realTestEvents": 8,
+  "streamClips": {
+    "school": 16,
+    "store": 16
+  },
+  "runs": 3,
+  "arms": [
+    {
+      "id": "one-site",
+      "label": "One school",
+      "points": [
+        {
+          "week": 0,
+          "labels": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "falseAlarms": {
+            "mean": 5,
+            "min": 5,
+            "max": 5
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 1,
+          "labels": {
+            "mean": 3,
+            "min": 3,
+            "max": 3
+          },
+          "falseAlarms": {
+            "mean": 3,
+            "min": 3,
+            "max": 3
+          },
+          "missed": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          },
+          "caught": {
+            "mean": 7.7,
+            "min": 7,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "week": 2,
+          "labels": {
+            "mean": 6,
+            "min": 6,
+            "max": 6
+          },
+          "falseAlarms": {
+            "mean": 1.3,
+            "min": 1,
+            "max": 2
+          },
+          "missed": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          },
+          "caught": {
+            "mean": 7.7,
+            "min": 7,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "week": 3,
+          "labels": {
+            "mean": 9,
+            "min": 9,
+            "max": 9
+          },
+          "falseAlarms": {
+            "mean": 1,
+            "min": 1,
+            "max": 1
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 4,
+          "labels": {
+            "mean": 11.7,
+            "min": 11,
+            "max": 12
+          },
+          "falseAlarms": {
+            "mean": 1,
+            "min": 1,
+            "max": 1
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "network",
+      "label": "School + store",
+      "points": [
+        {
+          "week": 0,
+          "labels": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "falseAlarms": {
+            "mean": 5,
+            "min": 5,
+            "max": 5
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 1,
+          "labels": {
+            "mean": 5,
+            "min": 5,
+            "max": 5
+          },
+          "falseAlarms": {
+            "mean": 2.7,
+            "min": 2,
+            "max": 3
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 2,
+          "labels": {
+            "mean": 10,
+            "min": 10,
+            "max": 10
+          },
+          "falseAlarms": {
+            "mean": 2,
+            "min": 2,
+            "max": 2
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 3,
+          "labels": {
+            "mean": 15.3,
+            "min": 15,
+            "max": 16
+          },
+          "falseAlarms": {
+            "mean": 1.3,
+            "min": 1,
+            "max": 2
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 4,
+          "labels": {
+            "mean": 20,
+            "min": 19,
+            "max": 21
+          },
+          "falseAlarms": {
+            "mean": 2.3,
+            "min": 1,
+            "max": 4
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "store-only",
+      "label": "Store labels only",
+      "points": [
+        {
+          "week": 0,
+          "labels": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "falseAlarms": {
+            "mean": 5,
+            "min": 5,
+            "max": 5
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 1,
+          "labels": {
+            "mean": 2,
+            "min": 2,
+            "max": 2
+          },
+          "falseAlarms": {
+            "mean": 4.7,
+            "min": 4,
+            "max": 5
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 2,
+          "labels": {
+            "mean": 5,
+            "min": 5,
+            "max": 5
+          },
+          "falseAlarms": {
+            "mean": 1.7,
+            "min": 1,
+            "max": 2
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 3,
+          "labels": {
+            "mean": 7,
+            "min": 7,
+            "max": 7
+          },
+          "falseAlarms": {
+            "mean": 2,
+            "min": 2,
+            "max": 2
+          },
+          "missed": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          },
+          "caught": {
+            "mean": 8,
+            "min": 8,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0,
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "week": 4,
+          "labels": {
+            "mean": 10,
+            "min": 10,
+            "max": 10
+          },
+          "falseAlarms": {
+            "mean": 1,
+            "min": 1,
+            "max": 1
+          },
+          "missed": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          },
+          "caught": {
+            "mean": 7.7,
+            "min": 7,
+            "max": 8
+          },
+          "fallbacks": {
+            "mean": 0.3,
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,16 +4,47 @@ import { resolve } from "node:path";
 
 import { MODEL_ID } from "../lib/ai";
 import {
+  buildSummary,
+  curveResultsSchema,
   curveScenariosSchema,
   runCurve,
-  summarizeRuns,
   type CurveResults,
   type CurveRun,
 } from "../lib/learning/curve";
 import { analyzeFrames } from "../lib/server/analyzeFrames";
 
 // Usage: npm run evals:learning -- --runs 3
-// Every run calls the model about 190 times with text-only frames.
+// Every run calls the model about 270 times with text-only frames.
+// npm run evals:learning -- --summarize rebuilds the summary from saved results, no model calls.
+const resultsPath = resolve("evals/results/learning-curve.json");
+const summaryPath = resolve("evals/results/learning-curve-summary.json");
+
+function writeSummary(results: CurveResults) {
+  const summary = buildSummary(results);
+  writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+  for (const arm of summary.arms) {
+    console.log(`\n${arm.label}`);
+    console.table(
+      arm.points.map((point) => ({
+        week: point.week,
+        labels: point.labels.mean,
+        falseAlarms: `${point.falseAlarms.mean} (${point.falseAlarms.min}-${point.falseAlarms.max})`,
+        missed: `${point.missed.mean} (${point.missed.min}-${point.missed.max})`,
+        caught: `${point.caught.mean} of ${summary.realTestEvents}`,
+        failedCalls: point.fallbacks.mean,
+      })),
+    );
+  }
+  console.log(`\nSaved ${summaryPath}`);
+}
+
+if (process.argv.includes("--summarize")) {
+  writeSummary(
+    curveResultsSchema.parse(JSON.parse(readFileSync(resultsPath, "utf8"))),
+  );
+  process.exit(0);
+}
+
 const runsFlag = process.argv.indexOf("--runs");
 const runCount = runsFlag === -1 ? 1 : Number(process.argv[runsFlag + 1]);
 if (!Number.isInteger(runCount) || runCount < 1 || runCount > 5) {
@@ -63,24 +94,6 @@ const results: CurveResults = {
   runs,
 };
 
-const outPath = resolve("evals/results/learning-curve.json");
-writeFileSync(outPath, `${JSON.stringify(results, null, 2)}\n`);
-
-for (const arm of summarizeRuns(runs)) {
-  console.log(`\n${arm.label}`);
-  console.table(
-    arm.points.map((point) => ({
-      week: point.week,
-      labels: point.labels.mean,
-      falseAlarms: `${point.falseAlarms.mean} (${point.falseAlarms.min}-${point.falseAlarms.max})`,
-      missed: `${point.missed.mean} (${point.missed.min}-${point.missed.max})`,
-      caught: `${point.caught.mean} of ${results.realTestEvents}`,
-    })),
-  );
-}
-
-const fallbacks = runs
-  .flatMap((run) => run.arms.flatMap((arm) => arm.points))
-  .reduce((sum, point) => sum + point.fallbacks, 0);
-if (fallbacks > 0) console.log(`\n${fallbacks} test calls fell back.`);
-console.log(`\nSaved ${outPath}`);
+writeFileSync(resultsPath, `${JSON.stringify(results, null, 2)}\n`);
+console.log(`Saved ${resultsPath}`);
+writeSummary(results);

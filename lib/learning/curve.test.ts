@@ -7,6 +7,9 @@ import type { AnalyzeOutput, DetectedEvent } from "../contracts";
 import type { AnalyzeInput } from "../server/analyzeFrames";
 import {
   ARMS,
+  buildSummary,
+  curveResultsSchema,
+  curveSummarySchema,
   curveScenariosSchema,
   officerLabels,
   runCurve,
@@ -178,8 +181,9 @@ describe("runCurve", () => {
       },
       startedAt: new Date("2026-10-17T00:00:00.000Z"),
     });
-    // Week 0: 3 test clips. One site: 2 stream + 2 weeks x 3 test. Network: 3 stream + 2 x 3.
-    expect(calls).toBe(3 + (2 + 6) + (3 + 6));
+    // Week 0: 3 test clips. Then stream clips plus 2 weeks x 3 test clips per arm:
+    // one site reviews 2 stream clips, the network 3, the store alone 1.
+    expect(calls).toBe(3 + (2 + 6) + (3 + 6) + (1 + 6));
     expect(run.arms.map((arm) => arm.id)).toEqual(ARMS.map((arm) => arm.id));
     expect(run.arms[0].points[0]).toEqual(run.arms[1].points[0]);
   });
@@ -190,12 +194,14 @@ describe("runCurve", () => {
       analyze: fakeAnalyze,
       startedAt: new Date("2026-10-17T00:00:00.000Z"),
     });
-    const [oneSite, network] = run.arms;
+    const [oneSite, network, storeOnly] = run.arms;
 
     expect(oneSite.points.map((point) => point.falseAlarms)).toEqual([2, 1, 1]);
     expect(network.points.map((point) => point.falseAlarms)).toEqual([2, 0, 0]);
     expect(network.points.map((point) => point.missed)).toEqual([0, 0, 0]);
     expect(network.points.at(-1)?.labels).toBe(3);
+    // The store only ever saw the bag pattern, so only that one transfers.
+    expect(storeOnly.points.map((point) => point.falseAlarms)).toEqual([2, 1, 1]);
   });
 
   it("counts a fallback as no events and reports it", async () => {
@@ -227,5 +233,15 @@ describe("summarizeRuns", () => {
       falseAlarms: { mean: 0, min: 0, max: 0 },
       labels: { mean: 2, min: 2, max: 2 },
     });
+  });
+});
+
+describe("evals/results", () => {
+  it("keeps the committed summary in sync with the committed results", () => {
+    const read = (file: string): unknown =>
+      JSON.parse(readFileSync(resolve("evals/results", file), "utf8"));
+    const results = curveResultsSchema.parse(read("learning-curve.json"));
+    const summary = curveSummarySchema.parse(read("learning-curve-summary.json"));
+    expect(summary).toEqual(buildSummary(results));
   });
 });

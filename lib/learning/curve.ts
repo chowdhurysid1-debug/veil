@@ -48,10 +48,12 @@ const SITE_RECORDS = {
   store: SEED_SITES[1],
 } as const satisfies Record<CurveSite, (typeof SEED_SITES)[number]>;
 
-// The two arms differ only in which sites' labels the system learns from.
+// The arms differ only in which sites' labels the system learns from. "store-only"
+// asks whether a school that joins later starts ahead because a store labeled first.
 export const ARMS = [
   { id: "one-site", label: "One school", sites: ["school"] },
   { id: "network", label: "School + store", sites: ["school", "store"] },
+  { id: "store-only", label: "Store labels only", sites: ["store"] },
 ] as const satisfies ReadonlyArray<{
   id: string;
   label: string;
@@ -59,6 +61,7 @@ export const ARMS = [
 }>;
 
 export type ArmId = (typeof ARMS)[number]["id"];
+const armIdSchema = z.enum(["one-site", "network", "store-only"]);
 
 export interface ClipScore {
   falseAlarms: number;
@@ -129,13 +132,24 @@ export const curvePointSchema = z.object({
   caught: z.int(),
   fallbacks: z.int(),
   thresholds: z.record(eventTypeSchema, z.number()),
+  // What the model saw of past labels when scoring this week. Older results lack it.
+  examples: z
+    .array(
+      z.object({
+        eventType: eventTypeSchema,
+        label: z.enum(["real", "false_alarm"]),
+        description: z.string(),
+        note: z.string().nullable(),
+      }),
+    )
+    .optional(),
   clips: z.array(clipResultSchema),
 });
 
 export const curveRunSchema = z.object({
   arms: z.array(
     z.object({
-      id: z.enum(["one-site", "network"]),
+      id: armIdSchema,
       label: z.string(),
       points: z.array(curvePointSchema),
     }),
@@ -230,6 +244,7 @@ export async function runCurve({
       ...totals,
       fallbacks: clips.filter((clip) => clip.isFallback).length,
       thresholds,
+      examples: selectExamples(labels),
       clips,
     };
   }
@@ -276,25 +291,30 @@ export async function runCurve({
   return { arms };
 }
 
-export interface Spread {
-  mean: number;
-  min: number;
-  max: number;
-}
+const spreadSchema = z.object({
+  mean: z.number(),
+  min: z.number(),
+  max: z.number(),
+});
 
-export interface SummaryPoint {
-  week: number;
-  labels: Spread;
-  falseAlarms: Spread;
-  missed: Spread;
-  caught: Spread;
-}
+const summaryPointSchema = z.object({
+  week: z.int(),
+  labels: spreadSchema,
+  falseAlarms: spreadSchema,
+  missed: spreadSchema,
+  caught: spreadSchema,
+  fallbacks: spreadSchema,
+});
 
-export interface ArmSummary {
-  id: ArmId;
-  label: string;
-  points: SummaryPoint[];
-}
+const armSummarySchema = z.object({
+  id: armIdSchema,
+  label: z.string(),
+  points: z.array(summaryPointSchema),
+});
+
+export type Spread = z.infer<typeof spreadSchema>;
+export type SummaryPoint = z.infer<typeof summaryPointSchema>;
+export type ArmSummary = z.infer<typeof armSummarySchema>;
 
 function spread(values: number[]): Spread {
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -325,6 +345,7 @@ export function summarizeRuns(runs: CurveRun[]): ArmSummary[] {
           falseAlarms: spread(at.map((point) => point.falseAlarms)),
           missed: spread(at.map((point) => point.missed)),
           caught: spread(at.map((point) => point.caught)),
+          fallbacks: spread(at.map((point) => point.fallbacks)),
         };
       }),
     };
@@ -344,3 +365,14 @@ export const curveResultsSchema = z.object({
 });
 
 export type CurveResults = z.infer<typeof curveResultsSchema>;
+
+// The small file the app and the pitch import: evals/results/learning-curve-summary.json.
+export const curveSummarySchema = curveResultsSchema
+  .omit({ runs: true })
+  .extend({ runs: z.int().min(1), arms: z.array(armSummarySchema) });
+
+export type CurveSummary = z.infer<typeof curveSummarySchema>;
+
+export function buildSummary({ runs, ...meta }: CurveResults): CurveSummary {
+  return { ...meta, runs: runs.length, arms: summarizeRuns(runs) };
+}
