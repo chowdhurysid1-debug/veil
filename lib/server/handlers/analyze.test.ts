@@ -179,3 +179,69 @@ describe("GET /api/clips/:id", () => {
     ).toBe(404);
   });
 });
+
+describe("learning applied to analysis", () => {
+  it("flags each type against its own learned threshold", async () => {
+    const borderline = 0.55;
+    const { deps, store } = makeDeps({
+      analyze: fakeAnalyzer([
+        { ...fall, confidence: borderline },
+        { ...fall, frameIndex: 2, type: "fight", confidence: borderline },
+      ]),
+    });
+    seedMemoryStore(store, TEST_NOW);
+    const { clipId } = await uploadClip(deps);
+
+    const body = await analyzed(await analyzeClip(clipId, deps));
+
+    expect(
+      body.events.map(({ type, threshold, flagged }) => ({
+        type,
+        threshold,
+        flagged,
+      })),
+    ).toEqual([
+      { type: "fall", threshold: 0.58, flagged: false },
+      { type: "fight", threshold: 0.5, flagged: true },
+    ]);
+    expect(
+      store.state.events.filter((event) => event.clipId === clipId),
+    ).toHaveLength(2);
+  });
+
+  it("gives the model reviewed examples from every site", async () => {
+    const analyze = fakeAnalyzer([]);
+    const { deps, store } = makeDeps({ analyze });
+    seedMemoryStore(store, TEST_NOW);
+    const { clipId } = await uploadClip(deps);
+
+    await analyzeClip(clipId, deps);
+
+    const { examples } = analyze.mock.calls[0][0];
+    expect(examples.length).toBeGreaterThan(0);
+    expect(new Set(examples.map((example) => example.siteName)).size).toBe(2);
+  });
+
+  it("runs one model call when the same clip is analyzed twice at once", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const analyze = vi.fn(async () => {
+      await gate;
+      return { data: { events: [fall] }, isFallback: false };
+    });
+    const { deps, store } = makeDeps({ analyze });
+    const { clipId } = await uploadClip(deps);
+
+    const first = analyzeClip(clipId, deps);
+    const second = analyzeClip(clipId, deps);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    release();
+    const [a, b] = await Promise.all([first, second]);
+
+    expect(analyze).toHaveBeenCalledTimes(1);
+    expect((await analyzed(a)).events).toEqual((await analyzed(b)).events);
+    expect(store.state.events).toHaveLength(1);
+  });
+});

@@ -4,7 +4,7 @@ import {
   type CreateClipRequest,
   type CreateClipResponse,
 } from "../../contracts";
-import { uniformThresholds } from "../../learning/thresholds";
+import { learnedThresholds } from "../../learning/thresholds";
 import { decodeBase64, isJpeg, sha256Hex } from "../bytes";
 import { toClipEvent } from "../clipEvents";
 import type { VeilDeps } from "../deps";
@@ -257,17 +257,18 @@ export async function getClipDetail(
     return errorResponse(404, "We could not find that clip.");
   }
 
-  const [frames, events, faces] = await Promise.all([
+  const [frames, events, faces, labels] = await Promise.all([
     deps.store.listFrames(clipId),
     deps.store.listEvents(clipId),
     deps.store.listFaces(clipId),
+    deps.store.listLabels(),
   ]);
   const urls = await deps.blobs.signedUrls(
     FRAMES_BUCKET,
     frames.map((frame) => frame.blurredPath),
     FRAME_URL_TTL_SECONDS,
   );
-  const thresholds = uniformThresholds();
+  const thresholds = learnedThresholds(labels);
 
   const body: ClipDetail = {
     id: clip.id,
