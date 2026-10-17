@@ -1,25 +1,30 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-// What the server vouches for at upload: this clip id had this file hash, captured at this time.
+// What the server vouches for: at stampedAt (server clock), this clip id was registered
+// with this file hash and this client-reported capture time. The browser computes the
+// hash because the original video never leaves it; the stamp pins that claim in time.
 export interface ClipStamp {
   clipId: string;
   sha256: string;
   capturedAt: string;
+  stampedAt: string;
 }
 
 const STAMP_VERSION = "veil-stamp-v1";
 
-// Normalizes the timestamp so a value read back from Postgres signs the same as the original.
+// Normalizes timestamps so values read back from Postgres sign the same as the originals.
 export function stampMessage({
   clipId,
   sha256,
   capturedAt,
+  stampedAt,
 }: ClipStamp): string {
   return [
     STAMP_VERSION,
     clipId,
     sha256,
     new Date(capturedAt).toISOString(),
+    new Date(stampedAt).toISOString(),
   ].join("|");
 }
 

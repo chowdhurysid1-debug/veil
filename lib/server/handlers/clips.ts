@@ -151,6 +151,7 @@ export async function createClip(
     clipId,
     sha256: input.originalSha256,
     capturedAt: input.capturedAt,
+    stampedAt,
   });
 
   const uploads: Upload[] = [];

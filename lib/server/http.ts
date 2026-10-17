@@ -15,6 +15,29 @@ export function errorResponse(status: number, message: string): Response {
   return json({ error: message }, status);
 }
 
+// Stops reading as soon as the body passes maxBytes, so an oversized upload is never buffered whole.
+async function readTextWithLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 type JsonBody = { ok: true; body: unknown } | { ok: false; response: Response };
 
 export async function readJson(
@@ -22,13 +45,19 @@ export async function readJson(
   maxBytes: number,
   tooLargeMessage = "This request is too large.",
 ): Promise<JsonBody> {
-  const declared = Number(request.headers.get("content-length") ?? "0");
-  if (declared > maxBytes) {
+  const header = request.headers.get("content-length");
+  if (header !== null && !/^\d+$/.test(header)) {
+    return {
+      ok: false,
+      response: errorResponse(400, "The Content-Length header is invalid."),
+    };
+  }
+  if (header !== null && Number(header) > maxBytes) {
     return { ok: false, response: errorResponse(413, tooLargeMessage) };
   }
 
-  const text = await request.text();
-  if (Buffer.byteLength(text) > maxBytes) {
+  const text = await readTextWithLimit(request, maxBytes);
+  if (text === null) {
     return { ok: false, response: errorResponse(413, tooLargeMessage) };
   }
 

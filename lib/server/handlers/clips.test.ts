@@ -46,6 +46,7 @@ describe("POST /api/clips", () => {
           clipId: body.clipId,
           sha256: upload.originalSha256,
           capturedAt: upload.capturedAt,
+          stampedAt: body.stampedAt,
         },
         body.signature,
       ),
