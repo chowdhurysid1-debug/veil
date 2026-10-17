@@ -1,6 +1,6 @@
 // The one place screens get data from. Every method mirrors a Tab B route and
-// returns a shape from lib/contracts.ts. Today it is backed by the in-memory
-// mock; C9 swaps in HTTP calls one method at a time.
+// returns a shape from lib/contracts.ts. C9 moves screens from the in-memory
+// mock to the real routes one at a time.
 import type {
   AnalyzeResponse,
   AuditEntry,
@@ -16,6 +16,7 @@ import type {
   VerifyRequest,
   VerifyResponse,
 } from "../../lib/contracts";
+import { httpBackend } from "./httpBackend";
 import { mockBackend } from "./mockBackend";
 
 export { VeilApiError, friendlyErrorMessage } from "./errors";
@@ -41,4 +42,11 @@ export interface VeilApi {
   ) => Promise<VerifyResponse>;
 }
 
-export const veilApi: VeilApi = mockBackend;
+export const veilApi: VeilApi = {
+  ...mockBackend,
+  // Clips: upload, list, and clip view share ids, so they move together.
+  listClips: httpBackend.listClips,
+  getClip: httpBackend.getClip,
+  createClip: httpBackend.createClip,
+  analyzeClip: httpBackend.analyzeClip,
+};

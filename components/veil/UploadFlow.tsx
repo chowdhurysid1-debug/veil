@@ -21,13 +21,13 @@ import { cn } from "cn";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type {
-  AnalyzeResponse,
-  ClipEvent,
-  PipelineProgress,
-  ProcessedFrame,
+import {
+  DEMO_SITE_ID,
+  type AnalyzeResponse,
+  type ClipEvent,
+  type PipelineProgress,
+  type ProcessedFrame,
 } from "@/lib/contracts";
-import { MOCK_SITES } from "@/lib/mock";
 import { processClip } from "@/lib/video";
 
 import { veilApi } from "./api";
@@ -40,8 +40,6 @@ import {
   pluralize,
 } from "./format";
 import { FrameImage, frameDataUrl } from "./FrameImage";
-
-const DEMO_SITE_ID = MOCK_SITES[0].id;
 
 const STEPS = [
   {
