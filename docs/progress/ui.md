@@ -12,6 +12,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - C7: /verify: pick a stamped clip (or arrive from the clip page), drop the file, hash it in the browser with `sha256File`, big Intact / Tampered verdict with the stamp time and both hash prefixes. 7c787c5
 - C8: landing page at / (replaces the template summarize demo): hero with a product mockup, the three SPEC.md figures each linked to its source, the "forgets faces" line, five-step how it works, CTA into /clips/new, footer with sources; scroll-aware nav. 584718b
 - C9 (clips): merged main (backend B1 to B9). `httpBackend` fetches every Tab B route and parses each response with `lib/contracts.ts`; server `{ error }` sentences are shown as-is, anything else gets the generic message. Clips list, upload (posts `DEMO_SITE_ID`), and clip view now run on the real API; checked end to end with a real upload (17 faces locked, signed frame URLs render). 79da413
+- C9 (review + learning): Real / False alarm labels post to `/api/events/:id/feedback` after the undo window, and the clip view's learning card and /learning read `/api/learning/stats`. Copy now says the trend is a running rate, matching the backend's cumulative `history`. Checked with a synthetic trash-can fire clip labeled Real (fire threshold 0.47 to 0.46; no fall labels added). a36fe2b
 
 ## Contract requests
 
