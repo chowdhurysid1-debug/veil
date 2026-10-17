@@ -12,6 +12,7 @@ import { sha256, sha256File } from "@/lib/crypto/hash";
 import { _arrayBufferToBase64 } from "@/lib/crypto/faceVault";
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+const MAX_DURATION_SECONDS = 300; // 5 minutes
 
 export class PipelineError extends Error {
   constructor(message: string) {
@@ -71,6 +72,16 @@ export async function processClip(
 
   if (extracted.frames.length === 0) {
     throw new PipelineError("No frames could be extracted from this video.");
+  }
+
+  if (extracted.durationSeconds > MAX_DURATION_SECONDS) {
+    // Release bitmaps before throwing
+    for (const frame of extracted.frames) {
+      frame.bitmap.close();
+    }
+    throw new PipelineError(
+      `Video is too long (${Math.round(extracted.durationSeconds)}s). Maximum is ${MAX_DURATION_SECONDS} seconds.`,
+    );
   }
 
   // Step 2: Detect faces
