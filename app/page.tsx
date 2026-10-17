@@ -196,9 +196,10 @@ export default function LandingPage() {
                 Every label teaches every site.
               </h2>
               <p className="max-w-md text-base leading-relaxed text-ink-muted">
-                One officer marks a hallway high-five as a false alarm. Every
-                school on Veil stops paging for it. A student pinned to a wall
-                still gets through.
+                Faces are blurred, so a hug and a scuffle look alike at first.
+                One officer marks a hug as a false alarm. Every school on Veil
+                stops paging for hugs. A student pinned to a wall still gets
+                through.
               </p>
             </FadeIn>
             <FadeIn delay={0.2} className="border border-signal/40 bg-panel">
@@ -208,7 +209,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-5 px-5 py-6">
                 <ExampleLine
                   label="Officer decision"
-                  value="High-five marked false alarm"
+                  value="Hug marked false alarm"
                 />
                 <ExampleLine
                   label="Fight threshold"
@@ -216,7 +217,7 @@ export default function LandingPage() {
                   isSignal
                 />
                 <ExampleLine label="Applies to" value="Every site" />
-                <ExampleLine label="Next high-five" value="Not flagged" />
+                <ExampleLine label="Next hug" value="Not flagged" />
                 <ExampleLine label="Next real fight" value="Flagged" />
               </div>
             </FadeIn>

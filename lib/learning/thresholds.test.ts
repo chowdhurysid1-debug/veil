@@ -75,7 +75,7 @@ describe("learnedThresholds", () => {
     });
   });
 
-  it("raises only the fight threshold after the demo's high-five false alarm", () => {
+  it("raises only the fight threshold after the demo's hug false alarm", () => {
     const seed = seedLabeledEvents(now);
     const before = learnedThresholds(seed);
     const after = learnedThresholds([
@@ -84,7 +84,7 @@ describe("learnedThresholds", () => {
         eventType: "fight",
         label: "false_alarm",
         description:
-          "Two students meet in the hallway and their raised hands strike each other.",
+          "Two people wrap their arms around each other in the gym.",
       }),
     ]);
     expect(after.fight).toBe(0.54);

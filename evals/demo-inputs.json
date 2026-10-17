@@ -36,16 +36,14 @@
   },
   {
     "kind": "analyze",
-    "id": "demo-1-high-five-first-time",
-    "why": "Demo step 2: before anyone has labeled a high-five, sudden hand contact between two students should raise a possible fight. It is really a false alarm, so it counts against fight precision.",
+    "id": "demo-1-hug-first-time",
+    "why": "Demo step 2: faces are blurred, so before anyone has labeled a hug, two people grabbing each other should raise a possible fight. It is really a false alarm, so it counts against fight precision.",
     "frames": [
-      "Students walk in both directions down a long school hallway lined with doors.",
-      "Two students head toward each other from opposite ends of the hallway.",
-      "As they meet, both students swing one arm up high toward the other.",
-      "Their raised hands strike each other hard above their heads.",
-      "Their arms swing apart after the contact and one student spins halfway around.",
-      "Both students keep walking in opposite directions.",
-      "A few students stand by the wall. The hallway is calm."
+      "Several people stand in a school gym in a loose group.",
+      "Two people step toward each other.",
+      "The two people throw their arms around each other.",
+      "They hold each other tightly, swaying side to side.",
+      "They let go and stand next to each other."
     ],
     "truth": [],
     "expectFlagged": [
@@ -54,22 +52,21 @@
   },
   {
     "kind": "analyze",
-    "id": "demo-2-high-five-after-label",
-    "why": "Demo step 3: a similar clip after the officer marked the first one a false alarm. Should not be flagged.",
+    "id": "demo-2-hug-after-label",
+    "why": "Demo step 3: a hug at another camera after the officer marked the first one a false alarm. Should not be flagged.",
     "addLabels": [
       {
         "type": "fight",
         "label": "false_alarm",
-        "description": "Two students meet in the hallway, swing their arms up, and their hands strike each other above their heads, then they keep walking.",
+        "description": "Two people embrace, one wrapping an arm around the other's shoulders and pulling them close, swaying together in the gym. Contact is sustained but there are no strikes or struggle.",
         "note": null
       }
     ],
     "frames": [
-      "A group of students walks toward the camera down a sunlit hallway.",
-      "One student turns toward another who is walking past.",
-      "The two students raise their arms and their hands strike each other at head height.",
-      "The two students lower their arms and keep walking side by side.",
-      "The students walk out of view at the end of the hallway."
+      "People walk across a courtyard with picnic tables.",
+      "Two people meet and wrap their arms around each other.",
+      "The two people hold the embrace for a moment.",
+      "They step apart and keep talking."
     ],
     "truth": [],
     "expectFlagged": []
@@ -77,12 +74,12 @@
   {
     "kind": "analyze",
     "id": "demo-3-collar-grab-after-label",
-    "why": "Demo step 4: a real fight after the high-five label. Learning must not hide it.",
+    "why": "Demo step 4: a real fight after the hug label. Learning must not hide it.",
     "addLabels": [
       {
         "type": "fight",
         "label": "false_alarm",
-        "description": "Two students meet in the hallway, swing their arms up, and their hands strike each other above their heads, then they keep walking.",
+        "description": "Two people embrace, one wrapping an arm around the other's shoulders and pulling them close, swaying together in the gym. Contact is sustained but there are no strikes or struggle.",
         "note": null
       }
     ],
@@ -152,7 +149,7 @@
   {
     "kind": "analyze",
     "id": "fight-play-wrestle",
-    "why": "Matches a seed false alarm: friends play-wrestling.",
+    "why": "Faces are blurred, so friendly grappling is reported at moderate confidence until an officer labels it. Counts against fight precision on purpose.",
     "frames": [
       "Two people walk together down the hallway, laughing.",
       "One person playfully puts the other in a loose headlock, both laughing.",
@@ -161,7 +158,9 @@
       "They walk on together side by side."
     ],
     "truth": [],
-    "expectFlagged": []
+    "expectFlagged": [
+      "fight"
+    ]
   },
   {
     "kind": "analyze",
