@@ -29,5 +29,175 @@
     "id": "missing-field",
     "input": { "body": "wrong key" },
     "expect": "rejected"
+  },
+  {
+    "kind": "analyze",
+    "id": "demo-1-shoe-tie-first-time",
+    "why": "Demo step 2: before anyone has labeled a shoe-tie, this should raise a possible fall. It is really a false alarm, so it counts against fall precision.",
+    "frames": [
+      "A person walks quickly down the hallway next to the lockers.",
+      "The person stops abruptly beside the lockers.",
+      "The person drops suddenly to the floor and lands sitting down, legs bent.",
+      "The person is on the floor beside the lockers, hunched forward, head down near their feet.",
+      "The person is still on the floor, hunched over, barely moving.",
+      "The person is still on the floor beside the lockers.",
+      "The person gets up from the floor.",
+      "The person walks away down the hallway."
+    ],
+    "truth": [],
+    "expectFlagged": ["fall"]
+  },
+  {
+    "kind": "analyze",
+    "id": "demo-2-shoe-tie-after-label",
+    "why": "Demo step 4: a similar clip after the officer marked the first one a false alarm. Should not be flagged.",
+    "addLabels": [
+      {
+        "type": "fall",
+        "label": "false_alarm",
+        "description": "A person drops suddenly to the floor beside the lockers and sits hunched over for several seconds, then gets up and walks away.",
+        "note": "Sat down to tie a shoe."
+      }
+    ],
+    "frames": [
+      "A person walks along the hallway near the water fountain.",
+      "The person slows down next to the wall.",
+      "The person drops quickly to the floor and sits with knees bent.",
+      "The person is on the floor, hunched forward with hands near one foot.",
+      "The person is still on the floor, hunched forward.",
+      "The person stands back up.",
+      "The person continues walking down the hallway."
+    ],
+    "truth": [],
+    "expectFlagged": []
+  },
+  {
+    "kind": "analyze",
+    "id": "demo-3-real-fall-after-label",
+    "why": "Demo step 4: a real fall after the shoe-tie label. Learning must not hide it.",
+    "addLabels": [
+      {
+        "type": "fall",
+        "label": "false_alarm",
+        "description": "A person drops suddenly to the floor beside the lockers and sits hunched over for several seconds, then gets up and walks away.",
+        "note": "Sat down to tie a shoe."
+      }
+    ],
+    "frames": [
+      "A person walks down the hallway carrying a stack of books.",
+      "The person's foot catches on a backpack strap on the floor.",
+      "The person pitches forward, arms out, books flying.",
+      "The person hits the floor face down.",
+      "The person lies face down on the floor, not moving.",
+      "Two other people rush over and kneel beside the person on the floor.",
+      "The person is still lying on the floor while the others crouch beside them."
+    ],
+    "truth": ["fall"],
+    "expectFlagged": ["fall"]
+  },
+  {
+    "kind": "analyze",
+    "id": "fall-slip-wet-floor",
+    "frames": [
+      "A person walks across the cafeteria entrance.",
+      "The person's feet slide out from under them on a shiny patch of floor.",
+      "The person lands hard on their back.",
+      "The person lies on their back on the floor, one arm over their head.",
+      "The person is still on the floor, trying to sit up slowly."
+    ],
+    "truth": ["fall"],
+    "expectFlagged": ["fall"]
+  },
+  {
+    "kind": "analyze",
+    "id": "fall-sits-against-wall",
+    "why": "Matches a seed false alarm: sitting down on purpose to wait.",
+    "frames": [
+      "A person walks to the wall outside a classroom door.",
+      "The person slides down the wall slowly and sits on the floor.",
+      "The person sits on the floor with their back against the wall, looking at a phone.",
+      "The person is still sitting against the wall, looking at the phone.",
+      "The person is still sitting calmly against the wall."
+    ],
+    "truth": [],
+    "expectFlagged": []
+  },
+  {
+    "kind": "analyze",
+    "id": "fight-shoving-punches",
+    "frames": [
+      "Two people stand face to face near the gym doors, close together.",
+      "One person shoves the other hard in the chest.",
+      "The second person stumbles back, then swings a fist at the first.",
+      "Both people grab each other and trade punches.",
+      "A small crowd gathers around the two people who are still hitting each other."
+    ],
+    "truth": ["fight"],
+    "expectFlagged": ["fight"]
+  },
+  {
+    "kind": "analyze",
+    "id": "fight-play-wrestle",
+    "why": "Matches a seed false alarm: friends play-wrestling.",
+    "frames": [
+      "Two people walk together down the hallway, laughing.",
+      "One person playfully puts the other in a loose headlock, both laughing.",
+      "They push each other lightly, still laughing.",
+      "They let go and give each other a high five.",
+      "They walk on together side by side."
+    ],
+    "truth": [],
+    "expectFlagged": []
+  },
+  {
+    "kind": "analyze",
+    "id": "theft-concealment",
+    "frames": [
+      "A person walks slowly down a store aisle, looking left and right.",
+      "The person takes two small boxes off the shelf.",
+      "The person slides both boxes inside their jacket.",
+      "The person zips the jacket and walks toward the front of the store.",
+      "The person walks past the checkout registers without stopping and out the exit."
+    ],
+    "truth": ["theft"],
+    "expectFlagged": ["theft"]
+  },
+  {
+    "kind": "analyze",
+    "id": "fire-trash-can",
+    "frames": [
+      "A quiet hallway with a trash can beside a bench.",
+      "A thin line of gray smoke rises from the trash can.",
+      "The smoke is thicker and darker, spreading along the ceiling.",
+      "Orange flames are visible at the top of the trash can.",
+      "Two people back away from the trash can while flames and smoke grow."
+    ],
+    "truth": ["fire"],
+    "expectFlagged": ["fire"]
+  },
+  {
+    "kind": "analyze",
+    "id": "other-climbs-railing",
+    "frames": [
+      "A person stands on a second-floor walkway overlooking the atrium.",
+      "The person puts one leg over the walkway railing.",
+      "The person is sitting on top of the railing with both legs on the outside, above a long drop.",
+      "The person is still on the outside of the railing, holding on with one hand."
+    ],
+    "truth": ["other"],
+    "expectFlagged": ["other"]
+  },
+  {
+    "kind": "analyze",
+    "id": "quiet-hallway",
+    "frames": [
+      "Several people walk along a hallway lined with lockers.",
+      "One person opens a locker and puts a book inside.",
+      "Two people stand and talk near a classroom door.",
+      "People continue walking past in both directions.",
+      "The hallway is mostly empty."
+    ],
+    "truth": [],
+    "expectFlagged": []
   }
 ]
