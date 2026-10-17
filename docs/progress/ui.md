@@ -4,6 +4,7 @@ One line per finished milestone: id, what shipped, commit hash.
 
 - C1: app shell (sidebar, mobile nav, skip link, demo identity), clips list on the mock backend, zinc + indigo theme, Inter. f42afba
 - C2: upload screen at /clips/new: drop zone, five-step progress, faces-locked counter, result with blurred filmstrip; mock pipeline hashes the real file. 2db58c6
+- C3: clip view at /clips/[id]: blurred frame player with face-lock boxes, keyboard timeline with event markers, filmstrip, event cards with confidence vs learned threshold. 73e645e
 
 ## Contract requests
 
