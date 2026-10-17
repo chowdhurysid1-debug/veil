@@ -14,6 +14,7 @@ One line per finished milestone: id, what shipped, commit hash.
 
 - No authentication on any route, by design: the SPEC scopes out real login and uses one hardcoded demo identity. Anyone with the deployed URL can upload clips and unlock faces (each unlock is still written to the audit log first). Before sharing a public URL, turn on Vercel Deployment Protection or add Supabase auth.
 - The original video never reaches the server, so `originalSha256` is computed in the browser. The HMAC stamp pins that hash to the server's own `stampedAt` time; it cannot prove the browser hashed the true original.
+- Demo step 2 has the thinnest margin: the first shoe-tying clip scored 0.70 and then 0.65 against a 0.58 threshold in two eval runs. If the real clip lands under 0.58 it will not be flagged. Pick a clip where the person drops to the floor abruptly, and dry-run it before the demo.
 - Learning is pooled across sites, as the SPEC promises, so one site that marks many false alarms raises the threshold for every site, fire included. Product call for later: cap how far other sites can move a threshold, or give fire a lower ceiling. The model prompt carries other sites' event descriptions and officer notes (fenced as data, 200 characters max) but never their site names.
 
 ## Milestones
@@ -28,3 +29,24 @@ One line per finished milestone: id, what shipped, commit hash.
 - B6: `POST /api/events/:id/feedback` (label `real` or `false_alarm`, optional note; labeling again replaces the label, so undo = send the other label) returns the updated `LearningStats`; `GET /api/learning/stats` returns totals, all five types with raw false-alarm rate and threshold, newest 10 labels, and `history` as the cumulative false-alarm rate per UTC day (one new label nudges the line rather than spiking a day); includes a test of demo steps 1 to 4 through the real handlers; 16 tests (1810231)
 - B7: `POST /api/faces/:id/unlock` requires a reason category and a reason of 15+ characters, writes the audit row (actor = demo identity) before unwrapping the key, and returns the key, IV, and a 30 s signed link to the ciphertext; if the audit write fails, no key leaves the server; `GET /api/audit` lists the newest 50 unlocks with their clip; 11 tests (9f3b3b5)
 - B8: `POST /api/clips/:id/verify` takes the browser-computed SHA-256 and answers `intact` only if it matches the stamped hash and the stamp's HMAC still checks out, so a one-byte edit, a rewritten stored hash, or a moved stamp time all read `tampered`; returns `stampedAt` and a 12-character hash prefix for the "stamp from 21:04" line; 6 tests (ecc27ed)
+- B9: `npm run evals` adds 11 analyze cases (frame-by-frame text descriptions, one per event type plus look-alikes and the three demo clips), run through the same analyzer, thresholds, and few-shot selection as the app, starting from the seed labels. `truth` drives precision; `expectFlagged` drives pass or fail. Results below (dc00369)
+
+## Eval results (2026-10-16, claude-sonnet-5-5, two runs)
+
+All 17 cases passed on both runs (6 summarize, 11 analyze). Event confidence / learned threshold, run 1 then run 2:
+
+| Case                         | Truth | Flagged                | Run 1             | Run 2             |
+| ---------------------------- | ----- | ---------------------- | ----------------- | ----------------- |
+| demo-1-shoe-tie-first-time   | none  | fall (demo needs this) | fall 0.70 / 0.58  | fall 0.65 / 0.58  |
+| demo-2-shoe-tie-after-label  | none  | none                   | fall 0.20 / 0.60  | fall 0.20 / 0.60  |
+| demo-3-real-fall-after-label | fall  | fall                   | fall 0.93 / 0.60  | fall 0.93 / 0.60  |
+| fall-slip-wet-floor          | fall  | fall                   | fall 0.92 / 0.58  | fall 0.92 / 0.58  |
+| fall-sits-against-wall       | none  | none                   | no event          | no event          |
+| fight-shoving-punches        | fight | fight                  | fight 0.93 / 0.50 | fight 0.93 / 0.50 |
+| fight-play-wrestle           | none  | none                   | no event          | no event          |
+| theft-concealment            | theft | theft                  | theft 0.85 / 0.51 | theft 0.85 / 0.51 |
+| fire-trash-can               | fire  | fire                   | fire 0.97 / 0.47  | fire 0.97 / 0.47  |
+| other-climbs-railing         | other | other                  | other 0.90 / 0.50 | other 0.85 / 0.50 |
+| quiet-hallway                | none  | none                   | no event          | no event          |
+
+Per-type precision against truth (same both runs): fall 0.67 (2 of 3; the one false positive is the demo's intentional first shoe-tie alert), fight 1.00, theft 1.00, fire 1.00, other 1.00. Recall 1.00 for every type. These are 11 hand-written text cases, not a benchmark: they show the demo path works in text form, not how the model does on real video.
