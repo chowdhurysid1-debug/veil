@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { PitchDeck } from "@/components/pitch/PitchDeck";
 
+import "./pitch.css";
+
 export const metadata: Metadata = {
   title: "Pitch",
   description:

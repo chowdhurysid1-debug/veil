@@ -61,32 +61,33 @@ const TEAM = [
   },
 ] as const;
 
-// From the repo on 2026-10-17: git log, app/api routes, npm test.
+// From the repo on 2026-10-17: npm test and public/demo.
 const BUILD_STATS = [
-  { value: 84, label: "Commits" },
-  { value: 8, label: "API routes" },
-  { value: 207, label: "Tests passing" },
+  { value: 244, label: "Tests passing" },
+  { value: 33, label: "Test files" },
+  { value: 7, label: "Real sample clips" },
 ] as const;
 
 const DEMO_STEPS = [
   {
-    action: "Upload a clip",
-    proves: "Every face blurred and encrypted before upload. 0 in the clear.",
+    action: "Run Passing period",
+    proves:
+      "Every head blurred before upload. Nothing flagged. 0 in the clear.",
     href: "/clips/new",
   },
   {
-    action: "AI flags a fall at 0:14",
-    proves: "Found from blurred frames. The model never saw a face.",
-    href: "/clips",
+    action: "Run High-five",
+    proves: "The AI flags a possible fight, from blurred frames only.",
+    href: "/clips/new",
   },
   {
     action: "Mark it False alarm",
-    proves: "One label moves the fall threshold for every site.",
+    proves: "Fight threshold 0.50 to 0.54, at every site.",
     href: "/learning",
   },
   {
-    action: "Similar clip: quiet. Real fall: flagged",
-    proves: "Fewer false pages, no missed falls.",
+    action: "Another high-five, then a student pinned to a wall",
+    proves: "The high-five stays quiet. The real fight still flags.",
     href: "/clips/new",
   },
   {
@@ -127,7 +128,7 @@ const WHY_NOW: {
   },
   {
     when: "2026",
-    what: "Vision models flag a fall from a blurred frame",
+    what: "Vision models flag a fight from blurred frames",
     icon: ScanEye,
   },
 ];
@@ -273,7 +274,7 @@ export const SLIDES: PitchSlide[] = [
     say: [
       "93% of US public schools run security cameras.",
       "Every one of those cameras stores every student's face.",
-      "This is our feed. Watch the box: that face is locked before it ever leaves the building.",
+      "This is a real hallway through Veil. Every head is blurred before the footage leaves the building.",
     ],
     Content: HookSlide,
   },
@@ -336,7 +337,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 20,
     say: [
       "Veil forgets faces unless there is a reason to remember.",
-      "Drag the line. Left is what every camera stores today. Right is what Veil stores: the same frame, with the face locked under its own key.",
+      "Drag the line. Same hallway, same second. Left is what every camera stores today. Right is what Veil stores.",
     ],
     question: {
       ask: "Why not just delete footage sooner?",
@@ -347,6 +348,7 @@ export const SLIDES: PitchSlide[] = [
       <SlideFrame
         kicker="03 / The solution"
         title="Veil forgets faces unless there is a reason to remember."
+        titleClassName="max-w-[32ch]"
       >
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-14">
           <Reveal order={1} className="flex flex-col gap-3">
@@ -380,14 +382,14 @@ export const SLIDES: PitchSlide[] = [
     why: "Proof beats promises. Judges score what they watch work.",
     seconds: 90,
     say: [
-      "The real console runs right inside this slide. Click a step on the left to jump the screen to it.",
+      "The real console runs inside this slide. Click a step on the left to jump the screen to it.",
       "Narrate what each step proves, not what you are clicking.",
-      "If analysis is slow, say: the clip is already stored and blurred, the model is reading blurred frames.",
+      "Reset the database before you present (supabase/reset-demo.sql, then seed.sql), or the high-five is already learned and will not flag.",
     ],
     question: {
-      ask: "What if the AI misses a real fall?",
+      ask: "What if the AI misses a real fight?",
       answer:
-        "Every event is stored, even under the threshold. The threshold only decides who gets paged. Recall was 1.00 for every type in our evals.",
+        "Every event is stored, even under the threshold. The threshold only decides who gets paged, and the pinned-to-a-wall clip shows a real fight still gets through.",
     },
     Content: DemoSlide,
   },
@@ -397,8 +399,8 @@ export const SLIDES: PitchSlide[] = [
     why: "Shows the claim is real engineering, not a mockup.",
     seconds: 20,
     say: [
-      "Follow one frame. In the browser the face is sharp. Before it crosses the amber line, it is blurred and locked.",
-      "The server stores ciphertext. The model reads blurred frames and flags a fall. The officer decides.",
+      "Follow one face. In the browser it is sharp. Before it crosses the amber line, it is blurred and locked.",
+      "The server stores ciphertext. The model reads blurred frames and flags a possible fight. The officer decides.",
     ],
     question: {
       ask: "Can Veil's own staff see faces?",
@@ -420,7 +422,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 25,
     say: [
       "This is the part that compounds.",
-      "One officer marks a shoe-tie as a false alarm. The hub passes it to every site. The fall threshold moves from 0.58 to 0.60 everywhere.",
+      "One officer marks a high-five as a false alarm. The hub passes it to every site. The fight threshold moves from 0.50 to 0.54 everywhere.",
       "More sites, more labels, fewer false pages. A copy starts at zero labels.",
     ],
     question: {
@@ -437,9 +439,9 @@ export const SLIDES: PitchSlide[] = [
           </div>
           <Reveal order={2} className="flex flex-col border-t border-hairline">
             {[
-              ["Officer marks", "False alarm"],
-              ["Fall threshold", "0.58 to 0.60"],
-              ["Next real fall", "Still flagged, 0.93"],
+              ["Officer marks", "High-five: false alarm"],
+              ["Fight threshold", "0.50 to 0.54"],
+              ["Pinned to a wall", "Still flagged"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -466,13 +468,13 @@ export const SLIDES: PitchSlide[] = [
     seconds: 20,
     say: [
       "This is our real test output.",
-      "207 tests pass. 11 of 11 eval cases pass on two runs, with recall 1.00 on every event type.",
-      "The first shoe-tie alert firing is on purpose: it is the false alarm the officer teaches away.",
+      "244 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math, tamper checks.",
+      "13 eval cases cover every demo clip plus look-alikes, and run against the real model with npm run evals.",
     ],
     question: {
-      ask: "Are 11 cases enough?",
+      ask: "How accurate is it on real video?",
       answer:
-        "No. They prove the demo path, not real-world accuracy. A labeled video set from a pilot is next.",
+        "We do not know yet, and we will not guess. The evals prove the demo path. A labeled video set from the first pilot measures real accuracy.",
     },
     Content: () => (
       <SlideFrame kicker="07 / Proof" title="Tested, not just demoed.">
@@ -482,9 +484,9 @@ export const SLIDES: PitchSlide[] = [
           </Reveal>
           <Reveal order={2} className="flex flex-col">
             {[
-              { value: 207, label: "Tests passing" },
-              { value: 11, label: "Of 11 eval cases passed" },
-              { value: 1, decimals: 2, label: "Recall, every event type" },
+              { value: 244, label: "Tests passing" },
+              { value: 13, label: "Eval cases, every demo clip" },
+              { value: 7, label: "Real clips with actors" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -492,7 +494,6 @@ export const SLIDES: PitchSlide[] = [
               >
                 <CountUp
                   value={stat.value}
-                  decimals={stat.decimals ?? 0}
                   className="font-display text-5xl font-bold tracking-tight text-ink tabular-nums"
                 />
                 <span className="label-mono text-right">{stat.label}</span>
@@ -513,7 +514,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 20,
     say: [
       "Regulators moved first. The FTC banned Rite Aid's face recognition. Texas took $1.4 billion. The EU banned face databases from CCTV.",
-      "And the models caught up: a vision model can flag a fall without ever seeing a face.",
+      "And the models caught up: a vision model can flag a fight without ever seeing a face.",
     ],
     question: {
       ask: "Why hasn't an incumbent built this?",
@@ -815,7 +816,7 @@ export const SLIDES: PitchSlide[] = [
     say: [
       "We want three pilots: one school, one store, one hospital.",
       "If you know a district safety director, we would like that introduction.",
-      "Back to the hallway. Same camera, same student, no face stored. Veil: cameras that forget faces.",
+      "Back to the hallway. Same camera, same students, no face stored. Veil: cameras that forget faces.",
     ],
     question: {
       ask: "What would a pilot look like?",

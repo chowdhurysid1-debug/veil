@@ -17,13 +17,20 @@ import { cn } from "cn";
 
 import { VeilLogo } from "@/components/veil/VeilLogo";
 
+import { ChannelCut, MonitorTexture } from "./motion";
 import { SLIDES, TOTAL_SECONDS, type PitchSlide } from "./slides";
 
 const SWIPE_THRESHOLD_PX = 50;
 const TICK_MS = 250;
 
 export function PitchDeck() {
-  const [index, setIndex] = useState(0);
+  // `cuts` counts slide changes, so each one replays the channel-cut transition.
+  const [nav, setNav] = useState<{
+    index: number;
+    direction: 1 | -1;
+    cuts: number;
+  }>({ index: 0, direction: 1, cuts: 0 });
+  const { index } = nav;
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
   const timer = usePitchTimer(index);
@@ -34,7 +41,15 @@ export function PitchDeck() {
   const slide = SLIDES[index];
 
   const goTo = useCallback((next: number) => {
-    setIndex(Math.max(0, Math.min(SLIDES.length - 1, next)));
+    setNav((current) => {
+      const clamped = Math.max(0, Math.min(SLIDES.length - 1, next));
+      if (clamped === current.index) return current;
+      return {
+        index: clamped,
+        direction: clamped > current.index ? 1 : -1,
+        cuts: current.cuts + 1,
+      };
+    });
   }, []);
 
   // Deep links: /pitch#moat opens on the moat slide, and editing the hash jumps.
@@ -44,7 +59,7 @@ export function PitchDeck() {
       const fromHash = SLIDES.findIndex(
         (candidate) => `#${candidate.id}` === window.location.hash,
       );
-      if (fromHash >= 0) setIndex(fromHash);
+      if (fromHash >= 0) goTo(fromHash);
     };
     const frame = requestAnimationFrame(readHash);
     window.addEventListener("hashchange", readHash);
@@ -52,7 +67,7 @@ export function PitchDeck() {
       cancelAnimationFrame(frame);
       window.removeEventListener("hashchange", readHash);
     };
-  }, []);
+  }, [goTo]);
 
   useEffect(() => {
     // Writing before the first read would overwrite a deep link.
@@ -117,6 +132,7 @@ export function PitchDeck() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      <MonitorTexture />
       <ViewfinderCorners />
 
       <header className="relative z-20 flex items-center justify-between gap-4 px-gutter pt-5 pb-3">
@@ -157,28 +173,37 @@ export function PitchDeck() {
       </header>
 
       <div className="relative z-10 flex min-h-0 flex-1">
-        <main
-          aria-roledescription="slide deck"
-          aria-label="Veil pitch"
-          className="relative min-w-0 flex-1 overflow-y-auto px-gutter"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.section
-              key={slide.id}
-              aria-roledescription="slide"
-              aria-label={`${slideNumber} of ${SLIDES.length}: ${slide.job}`}
-              className="h-full"
-              exit={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, filter: "blur(10px)" }
-              }
-              transition={{ duration: 0.25 }}
-            >
-              <slide.Content />
-            </motion.section>
-          </AnimatePresence>
-        </main>
+        <div className="relative min-w-0 flex-1">
+          <main
+            aria-roledescription="slide deck"
+            aria-label="Veil pitch"
+            className="absolute inset-0 overflow-y-auto px-gutter"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.section
+                key={slide.id}
+                aria-roledescription="slide"
+                aria-label={`${slideNumber} of ${SLIDES.length}: ${slide.job}`}
+                className="h-full"
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, filter: "blur(10px)", scale: 0.985 }
+                }
+                transition={{ duration: 0.3 }}
+              >
+                <slide.Content />
+              </motion.section>
+            </AnimatePresence>
+          </main>
+          {!shouldReduceMotion && nav.cuts > 0 && (
+            <ChannelCut
+              key={nav.cuts}
+              direction={nav.direction}
+              label={`Ch ${slideNumber} / ${slide.job}`}
+            />
+          )}
+        </div>
 
         <AnimatePresence>
           {isNotesOpen && (

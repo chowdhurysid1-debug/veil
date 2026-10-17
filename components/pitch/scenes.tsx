@@ -29,42 +29,45 @@ import { EASE_VEIL } from "@/components/veil/motion";
 import { veilApi } from "@/components/veil/api";
 import { useVeilQuery } from "@/components/veil/useVeilQuery";
 
-import {
-  FEED_FRAMES,
-  HALLWAY_CROP,
-  STILL,
-  STILL_BBOX,
-  STILL_FRAME_INDEX,
-  boxInCrop,
-} from "./frames";
-
 type Icon = ComponentType<{ className?: string }>;
 
-// Frames 4 to 16: the person walks in, crouches, and walks out.
-const FEED_START = 4;
-const FEED_END = 16;
+// Real footage: Pexels stock clips with actors (public/demo/CREDITS.md). The
+// blurred file is the app's own render of the raw passing-period clip, so the
+// two line up frame for frame.
+const FOOTAGE = {
+  raw: "/demo/cam03-hallway-b-passing.mp4",
+  blurred: "/demo/hero-hallway-blurred.mp4",
+  poster: "/demo/hero-hallway-blurred.jpg",
+  faceClear: "/pitch/face-clear.jpg",
+  faceBlurred: "/pitch/face-blurred.jpg",
+} as const;
 
-/** A looping hallway feed with a face lock that tracks the person. */
-export function CctvFeed({
-  fps = 3,
-  className,
-}: {
-  fps?: number;
-  className?: string;
-}) {
+const FEED_CLOCK_START_SECONDS = 14 * 3600 + 4 * 60;
+
+function formatFeedClock(offsetSeconds: number) {
+  const total = FEED_CLOCK_START_SECONDS + Math.floor(offsetSeconds);
+  return [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
+}
+
+/** The hallway clip after Veil blurred it, looping like a live feed. */
+export function CctvFeed({ className }: { className?: string }) {
   const shouldReduceMotion = useReducedMotion();
-  const [frame, setFrame] = useState(FEED_START);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const clockRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
-    const interval = setInterval(() => {
-      setFrame((current) => (current >= FEED_END ? FEED_START : current + 1));
-    }, 1000 / fps);
-    return () => clearInterval(interval);
-  }, [fps, shouldReduceMotion]);
-
-  const current = shouldReduceMotion ? STILL_FRAME_INDEX : frame;
-  const bbox = FEED_FRAMES[current].bbox;
+    const video = videoRef.current;
+    if (!video) return;
+    const handleTime = () => {
+      if (clockRef.current) {
+        clockRef.current.textContent = formatFeedClock(video.currentTime);
+      }
+    };
+    video.addEventListener("timeupdate", handleTime);
+    return () => video.removeEventListener("timeupdate", handleTime);
+  }, []);
 
   return (
     <div
@@ -73,39 +76,30 @@ export function CctvFeed({
         className,
       )}
     >
-      {FEED_FRAMES.map((feedFrame, index) =>
-        index < FEED_START || index > FEED_END ? null : (
-          <FrameImage
-            key={index}
-            src={feedFrame.src}
-            alt=""
-            priority={index === FEED_START}
-            className={cn(
-              "absolute inset-0",
-              index === current ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ),
-      )}
-      <div className="scanlines absolute inset-0" />
-      {bbox && (
-        <div
-          className="absolute border border-ink transition-all duration-300 ease-linear"
-          style={{
-            left: `${bbox.x * 100}%`,
-            top: `${bbox.y * 100}%`,
-            width: `${bbox.width * 100}%`,
-            height: `${bbox.height * 100}%`,
-          }}
-        >
-          <span className="absolute -top-5 left-[-1px] flex items-center gap-1 bg-ink px-1.5 py-0.5 font-mono text-[0.55rem] tracking-[0.14em] text-void uppercase">
-            <Lock className="size-2.5" aria-hidden />
-            Locked
+      <video
+        ref={videoRef}
+        src={FOOTAGE.blurred}
+        poster={FOOTAGE.poster}
+        autoPlay={!shouldReduceMotion}
+        muted
+        loop
+        playsInline
+        aria-label="School hallway footage with every head blurred"
+        className="absolute inset-0 size-full object-cover"
+      />
+      <div className="scanlines pointer-events-none absolute inset-0" />
+      <div className="absolute inset-x-0 top-0 flex items-start justify-between bg-gradient-to-b from-void/80 to-transparent px-4 pt-3 pb-8 font-mono text-[0.6rem] tracking-[0.14em] text-ink uppercase">
+        <span>Cam 03 / Hallway B</span>
+        <span className="flex items-center gap-2">
+          <span className="size-1.5 animate-veil-blink rounded-full bg-signal" />
+          Rec
+          <span ref={clockRef} className="tabular-nums">
+            {formatFeedClock(0)}
           </span>
-        </div>
-      )}
+        </span>
+      </div>
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-void/90 to-transparent px-4 pt-10 pb-3">
-        <FeedReadout label="Faces in view" value={bbox ? "01" : "00"} />
+        <FeedReadout label="Every face" value="Locked" />
         <FeedReadout label="Stored in the clear" value="00" />
         <FeedReadout label="Model input" value="Blurred" />
       </div>
@@ -125,7 +119,6 @@ function FeedReadout({ label, value }: { label: string; value: string }) {
     </span>
   );
 }
-
 const BREACH_COLUMNS = 60;
 const BREACH_ROWS = 25;
 const BREACH_DOTS = BREACH_COLUMNS * BREACH_ROWS;
@@ -294,21 +287,25 @@ export function SettlementBars({
   );
 }
 
+const SYNC_TOLERANCE_SECONDS = 0.12;
+
 /**
- * Drag to compare: what every other system stores on the left, what Veil
- * stores on the right. Sweeps once on its own to show it can be dragged.
+ * Drag to compare the same hallway, same moment: what every other camera
+ * stores on the left, what Veil stores on the right. Sweeps once on its own
+ * to show it can be dragged.
  */
 export function FaceSlider() {
-  const position = useMotionValue(78);
+  const position = useMotionValue(72);
   const clip = useTransform(
     position,
     (value) => `inset(0 ${100 - value}% 0 0)`,
   );
   const handleLeft = useTransform(position, (value) => `${value}%`);
-  const [rangeValue, setRangeValue] = useState(78);
+  const [rangeValue, setRangeValue] = useState(72);
   const shouldReduceMotion = useReducedMotion();
   const sweep = useRef<ReturnType<typeof animate> | null>(null);
-  const box = boxInCrop(STILL_BBOX, HALLWAY_CROP);
+  const blurredRef = useRef<HTMLVideoElement>(null);
+  const rawRef = useRef<HTMLVideoElement>(null);
 
   useMotionValueEvent(position, "change", (value) =>
     setRangeValue(Math.round(value)),
@@ -319,48 +316,67 @@ export function FaceSlider() {
       position.set(50);
       return;
     }
-    sweep.current = animate(position, [78, 30, 52], {
-      duration: 3.2,
-      delay: 1,
+    sweep.current = animate(position, [72, 28, 50], {
+      duration: 3.4,
+      delay: 1.2,
       ease: EASE_VEIL,
       times: [0, 0.55, 1],
     });
     return () => sweep.current?.stop();
   }, [position, shouldReduceMotion]);
 
+  // Keep the raw clip on the blurred clip's clock, so both halves show one moment.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const blurred = blurredRef.current;
+      const raw = rawRef.current;
+      if (!blurred || !raw) return;
+      if (
+        Math.abs(raw.currentTime - blurred.currentTime) > SYNC_TOLERANCE_SECONDS
+      ) {
+        raw.currentTime = blurred.currentTime;
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative aspect-[26/17] w-full overflow-hidden border border-hairline-strong bg-panel select-none">
-      <FrameImage src={STILL.blurred} alt="" className="absolute inset-0" />
-      <div
-        className="absolute flex flex-col items-center"
-        style={{
-          left: `${box.left}%`,
-          top: `${box.top}%`,
-          width: `${box.width}%`,
-          height: `${box.height}%`,
-        }}
-      >
-        <span className="size-full border border-signal" />
-        <span className="mt-1.5 flex items-center gap-1 bg-signal px-1.5 py-0.5 font-mono text-[0.55rem] tracking-[0.14em] whitespace-nowrap text-void uppercase">
-          <Lock className="size-2.5" aria-hidden />
-          AES-GCM / key 7f3a
-        </span>
-      </div>
+    <div className="relative aspect-video w-full overflow-hidden border border-hairline-strong bg-panel select-none">
+      <video
+        ref={blurredRef}
+        src={FOOTAGE.blurred}
+        poster={FOOTAGE.poster}
+        autoPlay={!shouldReduceMotion}
+        muted
+        loop
+        playsInline
+        aria-hidden
+        className="absolute inset-0 size-full object-cover"
+      />
       <motion.div className="absolute inset-0" style={{ clipPath: clip }}>
-        <FrameImage src={STILL.clear} alt="" className="absolute inset-0" />
-        <span className="label-mono absolute top-3 left-3 bg-void/80 px-2 py-1 text-ink">
-          Every other camera: face stored
-        </span>
+        <video
+          ref={rawRef}
+          src={FOOTAGE.raw}
+          autoPlay={!shouldReduceMotion}
+          muted
+          loop
+          playsInline
+          aria-hidden
+          className="absolute inset-0 size-full object-cover"
+        />
       </motion.div>
-      <span className="label-mono absolute top-3 right-3 bg-void/80 px-2 py-1 text-signal">
-        Veil: face locked
+      <span className="label-mono absolute top-3 left-3 bg-void/85 px-2 py-1 text-ink">
+        Every other camera stores this
+      </span>
+      <span className="label-mono absolute right-3 bottom-3 bg-void/85 px-2 py-1 text-signal sm:top-3 sm:bottom-auto">
+        Veil stores this
       </span>
       <div className="scanlines pointer-events-none absolute inset-0" />
       <motion.div
-        className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-ink"
+        className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-ink shadow-[0_0_18px_2px_rgb(239_238_233/0.5)]"
         style={{ left: handleLeft }}
       >
-        <span className="absolute top-1/2 left-1/2 flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ink bg-void text-ink">
+        <span className="absolute top-1/2 left-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ink bg-void text-ink">
           <ChevronsLeftRight className="size-4" aria-hidden />
         </span>
       </motion.div>
@@ -369,7 +385,7 @@ export function FaceSlider() {
         min={0}
         max={100}
         value={rangeValue}
-        aria-label="Compare stored footage: drag left for Veil, right for a regular camera"
+        aria-label="Compare stored footage: drag left to see what Veil keeps, right to see what a regular camera keeps"
         onPointerDown={() => sweep.current?.stop()}
         onKeyDown={() => sweep.current?.stop()}
         onChange={(event) => position.set(Number(event.target.value))}
@@ -378,7 +394,6 @@ export function FaceSlider() {
     </div>
   );
 }
-
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 800;
 
@@ -473,20 +488,20 @@ export function DataFlow() {
 
   return (
     <div className="relative grid grid-cols-4 gap-2 pt-24 md:gap-4">
-      <div className="absolute top-[7.5rem] right-[12.5%] left-[12.5%] h-px bg-hairline-strong" />
-      <div className="absolute top-12 bottom-0 left-1/4 w-px border-l border-dashed border-signal/70">
+      <div className="absolute top-[3rem] right-[12.5%] left-[12.5%] h-px bg-hairline-strong" />
+      <div className="absolute top-0 bottom-0 left-1/4 w-px border-l border-dashed border-signal/70">
         <span className="label-mono absolute top-0 left-2 hidden whitespace-nowrap text-signal md:block">
           Privacy line
         </span>
       </div>
       <motion.div
-        className="absolute top-[5.5rem] z-10 -translate-x-1/2"
+        className="absolute top-[1rem] z-10 -translate-x-1/2"
         animate={{ left: `${12.5 + step * 25}%` }}
         transition={{ duration: 0.9, ease: EASE_VEIL }}
       >
         <div className="relative size-16 overflow-hidden border border-ink bg-panel">
           <FrameImage
-            src={isLocked ? STILL.headBlurred : STILL.headClear}
+            src={isLocked ? FOOTAGE.faceBlurred : FOOTAGE.faceClear}
             alt=""
             className="absolute inset-0"
           />
@@ -502,7 +517,7 @@ export function DataFlow() {
             animate={{ opacity: 1, y: 0 }}
             className="absolute -top-8 left-1/2 -translate-x-1/2 bg-signal px-2 py-1 font-mono text-[0.6rem] tracking-[0.14em] whitespace-nowrap text-void uppercase"
           >
-            Fall 0.71
+            Possible fight
           </motion.span>
         )}
         {step === 3 && (
@@ -518,7 +533,7 @@ export function DataFlow() {
       {FLOW_STATIONS.map(({ name, line, icon: StationIcon }, index) => (
         <div
           key={name}
-          className="relative flex flex-col items-center gap-3 pt-12 text-center"
+          className="relative flex flex-col items-center gap-3 pt-2 text-center"
         >
           <span
             className={cn(
@@ -693,33 +708,40 @@ export function LabelNetwork() {
   );
 }
 
+// Real `npm test` results from 2026-10-17, trimmed to the files that test a promise.
 const TERMINAL_SCRIPT: { kind: "command" | "output" | "pass"; text: string }[] =
   [
     { kind: "command", text: "npm test" },
-    { kind: "output", text: "Test Files  30 passed (30)" },
-    { kind: "pass", text: "Tests  207 passed (207)" },
-    { kind: "command", text: "npm run evals" },
     {
       kind: "output",
-      text: "demo-1 shoe-tie, first time    fall 0.70 / 0.58   flagged",
+      text: "PASS  lib/video/headBoxes.test.ts            10 tests",
     },
     {
       kind: "output",
-      text: "demo-2 shoe-tie, after label   fall 0.20 / 0.60   quiet",
+      text: "PASS  lib/crypto/faceVault.test.ts            5 tests",
     },
     {
       kind: "output",
-      text: "demo-3 real fall, after label  fall 0.93 / 0.60   flagged",
+      text: "PASS  lib/server/handlers/unlock.test.ts     11 tests",
     },
     {
       kind: "output",
-      text: "fight, shoving                 fight 0.93 / 0.50  flagged",
+      text: "PASS  lib/learning/thresholds.test.ts         8 tests",
     },
     {
       kind: "output",
-      text: "fire, trash can                fire 0.97 / 0.47   flagged",
+      text: "PASS  lib/server/handlers/analyze.test.ts    13 tests",
     },
-    { kind: "pass", text: "11 of 11 cases passed. Recall 1.00 on every type." },
+    {
+      kind: "output",
+      text: "PASS  lib/server/signing.test.ts              8 tests",
+    },
+    {
+      kind: "output",
+      text: "PASS  lib/server/handlers/verify.test.ts      6 tests",
+    },
+    { kind: "output", text: "Test Files  33 passed (33)" },
+    { kind: "pass", text: "Tests  244 passed (244)" },
   ];
 const TYPE_MS = 45;
 const OUTPUT_MS = 140;
@@ -738,7 +760,7 @@ function terminalTimeline() {
 const TERMINAL_STARTS = terminalTimeline();
 const TERMINAL_END = (TERMINAL_STARTS.at(-1) ?? 0) + OUTPUT_MS;
 
-/** Types out the real test and eval results. */
+/** Types out the real test results. */
 export function Terminal() {
   const shouldReduceMotion = useReducedMotion();
   const [elapsed, setElapsed] = useState(0);
@@ -764,7 +786,7 @@ export function Terminal() {
         <span className="size-2 rounded-full bg-hairline-strong" />
         <span className="label-mono ml-2">veil / main</span>
       </div>
-      <pre className="min-h-[19rem] overflow-x-auto px-4 py-4 font-mono text-[0.7rem] leading-relaxed md:text-xs">
+      <pre className="min-h-[15rem] overflow-x-auto px-4 py-4 font-mono text-[0.7rem] leading-relaxed md:text-xs">
         {TERMINAL_SCRIPT.map((line, index) => {
           const start = TERMINAL_STARTS[index];
           if (time < start) return null;
@@ -802,7 +824,7 @@ export function SchoolUnits({ lit = 93 }: { lit?: number }) {
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="grid grid-cols-10 gap-1"
+        className="grid max-w-[17rem] grid-cols-10 gap-1"
         role="img"
         aria-label={`${lit} of 100 squares lit: ${lit}% of US public schools use security cameras`}
       >
@@ -836,7 +858,7 @@ export function MarketBars() {
   ];
   const max = 47.9;
   return (
-    <div className="flex h-72 items-end gap-6">
+    <div className="flex h-56 items-end gap-6">
       {bars.map((bar, index) => (
         <div
           key={bar.year}
@@ -870,62 +892,93 @@ const CIPHERTEXT =
   "7f3a 91c2 0be4 5d17 a8f0 3c6e 92d1 4b07 e5a3 1f8c 6d20 b9e7 0a4f c3d8 5e61 82b9";
 
 /**
- * Exploded view of what a system keeps: the screen layer on top, the disk
- * layer underneath. The layers lift apart to show the difference.
+ * What a system keeps, as two layers: the screen the guard sees on top, the
+ * disk underneath. The disk layer slides out from under the screen.
  */
 export function LayerStack({ variant }: { variant: "veil" | "other" }) {
   const shouldReduceMotion = useReducedMotion();
   const isVeil = variant === "veil";
   return (
-    <div className="flex flex-col gap-5">
-      <div className="relative h-56 [perspective:1100px] md:h-64">
-        <div className="absolute inset-x-6 top-6 bottom-0 [transform:rotateX(52deg)_rotateZ(-32deg)] [transform-style:preserve-3d]">
-          <div className="absolute inset-0 flex items-center justify-center border border-hairline-strong bg-panel-2">
-            {isVeil ? (
-              <span className="flex flex-col items-center gap-2 p-3">
-                <Lock className="size-6 text-signal" aria-hidden />
-                <span className="line-clamp-3 max-w-[14rem] text-center font-mono text-[0.55rem] leading-relaxed break-all text-signal/80">
-                  {CIPHERTEXT}
-                </span>
+    <div className="flex flex-col">
+      <LayerCard label="Screen" caption="Blurred" isTop>
+        <Thumb src={FOOTAGE.faceBlurred} />
+      </LayerCard>
+      <motion.div
+        initial={shouldReduceMotion ? false : { y: -72, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 1.1, ease: EASE_VEIL, delay: 1 }}
+        className="flex flex-col"
+      >
+        <span className="ml-14 h-6 w-px border-l border-dashed border-hairline-strong" />
+        <LayerCard
+          label="Disk"
+          caption={isVeil ? "Ciphertext, one key per face" : "The real face"}
+          isAlarm={!isVeil}
+          isSignal={isVeil}
+        >
+          {isVeil ? (
+            <span className="flex size-28 shrink-0 flex-col items-center justify-center gap-1.5 border border-signal/60 bg-void p-2">
+              <Lock className="size-5 text-signal" aria-hidden />
+              <span className="line-clamp-4 text-center font-mono text-[0.5rem] leading-relaxed break-all text-signal">
+                {CIPHERTEXT}
               </span>
-            ) : (
-              <span className="relative size-24 overflow-hidden border border-ink">
-                <FrameImage
-                  src={STILL.headClear}
-                  alt=""
-                  className="absolute inset-0"
-                />
-              </span>
-            )}
-          </div>
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center border border-ink/60 bg-void/85"
-            initial={shouldReduceMotion ? false : { z: 0 }}
-            animate={{ z: 90 }}
-            transition={{ duration: 1.4, ease: EASE_VEIL, delay: 0.8 }}
-          >
-            <span className="relative size-24 overflow-hidden border border-hairline-strong">
-              <FrameImage
-                src={STILL.headBlurred}
-                alt=""
-                className="absolute inset-0"
-              />
             </span>
-          </motion.div>
-        </div>
-      </div>
-      <dl className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 border-t border-hairline pt-4">
-        <dt className="label-mono">Screen</dt>
-        <dd className="text-sm text-ink">Blurred</dd>
-        <dt className="label-mono">Disk</dt>
-        <dd className={cn("text-sm", isVeil ? "text-signal" : "text-ink")}>
-          {isVeil ? "Encrypted, one key per face" : "Real faces"}
-        </dd>
-        <dt className="label-mono">Cameras</dt>
-        <dd className="text-sm text-ink">
-          {isVeil ? "Any camera that exports video" : "Verkada hardware only"}
-        </dd>
-      </dl>
+          ) : (
+            <Thumb src={FOOTAGE.faceClear} />
+          )}
+        </LayerCard>
+      </motion.div>
+      <p className="label-mono mt-4">
+        Cameras: {isVeil ? "any that export video" : "Verkada hardware only"}
+      </p>
+    </div>
+  );
+}
+
+function Thumb({ src }: { src: string }) {
+  return (
+    <span className="relative size-28 shrink-0 overflow-hidden border border-hairline-strong">
+      <FrameImage src={src} alt="" className="absolute inset-0" />
+    </span>
+  );
+}
+
+function LayerCard({
+  label,
+  caption,
+  children,
+  isTop = false,
+  isAlarm = false,
+  isSignal = false,
+}: {
+  label: string;
+  caption: string;
+  children: React.ReactNode;
+  isTop?: boolean;
+  isAlarm?: boolean;
+  isSignal?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative z-10 flex items-center gap-5 border p-3",
+        isTop ? "border-hairline-strong bg-panel" : "bg-panel-2",
+        isAlarm && "border-ink",
+        isSignal && "border-signal/50",
+      )}
+    >
+      {children}
+      <span className="flex flex-col gap-1.5">
+        <span className="label-mono">{label}</span>
+        <span
+          className={cn(
+            "font-display text-title font-bold uppercase",
+            isSignal ? "text-signal" : "text-ink",
+          )}
+        >
+          {caption}
+        </span>
+      </span>
     </div>
   );
 }

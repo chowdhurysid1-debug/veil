@@ -14,12 +14,14 @@ export function SlideFrame({
   children,
   isSignal = false,
   className,
+  titleClassName = "max-w-[22ch]",
 }: {
   kicker: string;
   title: string;
   children?: ReactNode;
   isSignal?: boolean;
   className?: string;
+  titleClassName?: string;
 }) {
   return (
     <div
@@ -30,7 +32,7 @@ export function SlideFrame({
     >
       <div className="flex flex-col gap-4">
         <Kicker text={kicker} isSignal={isSignal} />
-        <Headline text={title} className="max-w-[22ch]" />
+        <Headline text={title} className={titleClassName} />
       </div>
       {children}
     </div>
