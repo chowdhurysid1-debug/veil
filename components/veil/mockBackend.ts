@@ -149,6 +149,11 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** The scenario the next upload gets, so the mock pipeline draws matching frames. */
+export function peekNextMockScenario(): MockScenario {
+  return MOCK_SCENARIOS[db.uploads % MOCK_SCENARIOS.length];
+}
+
 function findClip(clipId: string): StoredClip {
   const clip = db.clips.find((stored) => stored.detail.id === clipId);
   if (!clip) {
@@ -198,7 +203,7 @@ export const mockBackend: VeilApi = {
     const site = MOCK_SITES.find(
       (candidate) => candidate.id === request.siteId,
     );
-    const scenario = MOCK_SCENARIOS[db.uploads % MOCK_SCENARIOS.length];
+    const scenario = peekNextMockScenario();
     db.uploads += 1;
     const clipId = crypto.randomUUID();
     const stampedAt = new Date().toISOString();

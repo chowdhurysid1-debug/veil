@@ -49,7 +49,7 @@ export function IdentityBadge({
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-zinc-100">{ROLE}</p>
         <p className="truncate text-xs text-zinc-500">
-          {DEMO_IDENTITY.siteName} · demo login
+          {DEMO_IDENTITY.siteName}
         </p>
       </div>
     </div>

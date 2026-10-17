@@ -35,6 +35,12 @@ export function formatClipTime(tSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+/** "Possible fall at 0:14", the way the spec words an alert. */
+export function eventHeadline(type: EventType, tSeconds: number): string {
+  const what = type === "other" ? "incident" : type;
+  return `Possible ${what} at ${formatClipTime(tSeconds)}`;
+}
+
 /** ISO timestamp -> "21:04" in the viewer's time zone. */
 export function formatStampTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", {
