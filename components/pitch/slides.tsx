@@ -64,12 +64,17 @@ const TEAM = [
     role: "Product, design and build",
     line: "USC Iovine and Young Academy and Marshall, Business of Innovation",
   },
+  {
+    name: "Anshul Bihani",
+    role: "Product, design and build",
+    line: null,
+  },
 ] as const;
 
 // From the repo on 2026-10-17: npm test and public/demo.
 const BUILD_STATS = [
-  { value: 264, label: "Tests passing" },
-  { value: 33, label: "Test files" },
+  { value: 267, label: "Tests passing" },
+  { value: 35, label: "Test files" },
   { value: 7, label: "Real sample clips" },
 ] as const;
 
@@ -151,6 +156,32 @@ function curveEnds(id: Parameters<typeof armById>[0]) {
 }
 const CURVE_ONE_SITE = curveEnds("one-site");
 const CURVE_STORE_ONLY = curveEnds("store-only");
+
+const AI_PARTS = [
+  {
+    kind: "Computer vision",
+    tool: "MediaPipe, in the browser",
+    does: "BlazeFace and EfficientDet find every head. Each is blurred in every frame and encrypted with its own AES-256 key before upload.",
+  },
+  {
+    kind: "Vision LLM",
+    tool: "Claude Sonnet 5.5",
+    does: "Through the Vercel AI SDK. Reads up to 20 blurred frames and returns typed events (Zod): type, confidence, frame.",
+  },
+  {
+    kind: "Continual learning",
+    tool: "Officer labels",
+    does: "Each event type's threshold follows its false-alarm rate. Recent labels from every site become few-shot examples.",
+  },
+] as const;
+
+const BUILT_WITH = [
+  "Next.js",
+  "Supabase",
+  "Vercel",
+  "Parallel Claude Code agents",
+  "267 tests",
+] as const;
 
 const RISKS = [
   {
@@ -435,6 +466,55 @@ export const SLIDES: PitchSlide[] = [
     ),
   },
   {
+    id: "ai",
+    job: "AI component",
+    why: "Judges score how AI is used: name the model, the API, and the technique.",
+    seconds: 20,
+    say: [
+      "Three parts. Computer vision: MediaPipe finds every head in the browser, and each one is blurred and encrypted with its own key.",
+      "A vision LLM: Claude Sonnet 5.5, through the Vercel AI SDK, reads only blurred frames and returns typed events with a confidence.",
+      "Continual learning: every officer label sets that event type's threshold and becomes an example the model sees next time.",
+    ],
+    question: {
+      ask: "Why not train your own model?",
+      answer:
+        "We have no labeled school footage yet, and a general vision model already knows what a shove looks like. The labels teach it each site's normal. A pilot's labels are the dataset for a smaller model later.",
+    },
+    Content: () => (
+      <SlideFrame
+        kicker="06 / Under the hood"
+        title="Vision sees. Claude judges. Officers teach."
+        titleClassName="max-w-[24ch]"
+      >
+        <div className="grid grid-cols-1 border-t border-l border-hairline md:grid-cols-3">
+          {AI_PARTS.map((part, index) => (
+            <Reveal
+              key={part.kind}
+              order={index + 1}
+              className="flex flex-col gap-4 border-r border-b border-hairline p-5 md:p-6"
+            >
+              <span className="label-mono text-signal">{part.kind}</span>
+              <span className="font-display text-title font-bold uppercase">
+                {part.tool}
+              </span>
+              <span className="text-sm leading-relaxed text-ink-muted">
+                {part.does}
+              </span>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal order={4} className="flex flex-wrap gap-x-6 gap-y-2">
+          <span className="label-mono text-ink">Built with</span>
+          {BUILT_WITH.map((tool) => (
+            <span key={tool} className="label-mono">
+              {tool}
+            </span>
+          ))}
+        </Reveal>
+      </SlideFrame>
+    ),
+  },
+  {
     id: "moat",
     job: "Moat",
     why: "Answers why a bigger company cannot copy this next quarter.",
@@ -453,7 +533,7 @@ export const SLIDES: PitchSlide[] = [
       <div className="mx-auto grid min-h-full w-full max-w-7xl grid-cols-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
-            <Kicker text="06 / The moat" isSignal />
+            <Kicker text="07 / The moat" isSignal />
             <Headline text="Every label teaches every site." />
           </div>
           <Reveal order={2} className="flex flex-col border-t border-hairline">
@@ -498,7 +578,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="07 / Measured"
+        kicker="08 / Measured"
         title="Blurred faces cost accuracy. Labels win it back."
         titleClassName="max-w-[26ch]"
       >
@@ -543,7 +623,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 20,
     say: [
       "This is our real test output.",
-      "264 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math and learning curve, tamper checks.",
+      "267 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math and learning curve, tamper checks.",
       "19 of 19 eval cases pass against the real model, covering every demo clip plus look-alikes.",
     ],
     question: {
@@ -552,14 +632,14 @@ export const SLIDES: PitchSlide[] = [
         "We do not know yet, and we will not guess. The evals prove the demo path. A labeled video set from the first pilot measures real accuracy.",
     },
     Content: () => (
-      <SlideFrame kicker="08 / Proof" title="Tested, not just demoed.">
+      <SlideFrame kicker="09 / Proof" title="Tested, not just demoed.">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-14">
           <Reveal order={1}>
             <Terminal />
           </Reveal>
           <Reveal order={2} className="flex flex-col">
             {[
-              { value: 264, label: "Tests passing" },
+              { value: 267, label: "Tests passing" },
               { value: 19, label: "Of 19 eval cases passed" },
               { value: 7, label: "Real clips with actors" },
             ].map((stat) => (
@@ -598,7 +678,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="09 / Why now"
+        kicker="10 / Why now"
         title="Regulators moved. The models caught up."
       >
         <div className="relative">
@@ -664,7 +744,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="10 / Market"
+        kicker="11 / Market"
         title="Schools first. Every camera next."
       >
         <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-2 lg:gap-16">
@@ -724,7 +804,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="11 / Competition"
+        kicker="12 / Competition"
         title="They blur the screen. We blur the file."
       >
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16">
@@ -760,7 +840,7 @@ export const SLIDES: PitchSlide[] = [
     },
     Content: () => (
       <SlideFrame
-        kicker="12 / Business model"
+        kicker="13 / Business model"
         title="Software on the cameras they already own."
       >
         <Reveal order={1}>
@@ -802,7 +882,7 @@ export const SLIDES: PitchSlide[] = [
         "Trust. A privacy product has to survive an audit, so key handling and login ship before any real footage.",
     },
     Content: () => (
-      <SlideFrame kicker="13 / Risks" title="What we know is not done.">
+      <SlideFrame kicker="14 / Risks" title="What we know is not done.">
         <ul className="grid grid-cols-1 border-t border-l border-hairline sm:grid-cols-2 lg:grid-cols-5">
           {RISKS.map(({ icon: RiskIcon, risk, plan }, index) => (
             <li key={risk} className="border-r border-b border-hairline">
@@ -836,12 +916,12 @@ export const SLIDES: PitchSlide[] = [
     why: "Judges back people. Say why you are the ones to build it.",
     seconds: 15,
     say: [
-      "Say why this problem is personal to the team, in one sentence.",
-      "Then what each person built at this hackathon.",
+      "We are Sid and Anshul. We built every part of Veil together at this hackathon.",
+      "Say why this problem is personal to you, in one sentence.",
     ],
     Content: () => (
       <SlideFrame
-        kicker="14 / Team"
+        kicker="15 / Team"
         title="Built at this hackathon, end to end."
       >
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -855,9 +935,11 @@ export const SLIDES: PitchSlide[] = [
                 {person.name}
               </span>
               <span className="label-mono text-ink">{person.role}</span>
-              <span className="text-sm leading-relaxed text-ink-muted">
-                {person.line}
-              </span>
+              {person.line && (
+                <span className="text-sm leading-relaxed text-ink-muted">
+                  {person.line}
+                </span>
+              )}
             </Reveal>
           ))}
         </div>
@@ -901,7 +983,7 @@ export const SLIDES: PitchSlide[] = [
     Content: () => (
       <div className="mx-auto grid min-h-full w-full max-w-7xl grid-cols-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
         <div className="flex flex-col gap-8">
-          <Kicker text="15 / The ask" />
+          <Kicker text="16 / The ask" />
           <Headline
             size="display"
             text="Cameras that forget faces."
@@ -949,3 +1031,93 @@ export const TOTAL_SECONDS = SLIDES.reduce(
   (total, slide) => total + slide.seconds,
   0,
 );
+
+export type DeckCut = "full" | "video";
+
+// The 2-minute submission video, in the order the judges asked for: context,
+// impact and why now, solution in action, the AI, how it was built. /pitch?cut=video
+const VIDEO_CUT: ReadonlyArray<{ id: string; seconds: number; say: string[] }> =
+  [
+    {
+      id: "hook",
+      seconds: 8,
+      say: [
+        "93% of US public schools run security cameras. Every one of them stores every student's face.",
+      ],
+    },
+    {
+      id: "problem",
+      seconds: 14,
+      say: [
+        "Stored faces leak. In 2021 hackers got into 150,000 Verkada cameras, inside schools. Meta paid Texas 1.4 billion dollars over face data.",
+        "If the face is on the server, it can leak.",
+      ],
+    },
+    {
+      id: "why-now",
+      seconds: 10,
+      say: [
+        "Regulators moved: the FTC banned Rite Aid's face recognition, and the EU banned face databases from CCTV. And vision models can now flag a fight without seeing a face.",
+      ],
+    },
+    {
+      id: "solution",
+      seconds: 10,
+      say: [
+        "Veil is security cameras that forget faces. Every head is blurred and encrypted in the browser, before footage leaves the building.",
+      ],
+    },
+    {
+      id: "demo",
+      seconds: 40,
+      say: [
+        "Switch to a screen recording of the live app for this part.",
+        "A passing period: every head blurred, nothing flagged. Two students grab each other in the gym: flagged as a possible fight.",
+        "The officer marks it a false alarm, it was a hug, and the fight threshold rises at every site. Another hug: not flagged. A student pinned to a wall: still flagged.",
+        "Unlocking a face takes a written reason and lands in the audit log. Edit one byte of a clip, and Verify says Tampered.",
+      ],
+    },
+    {
+      id: "ai",
+      seconds: 15,
+      say: [
+        "Under the hood: MediaPipe finds heads in the browser. Claude Sonnet 5.5, through the Vercel AI SDK, reads only blurred frames and returns typed events. Officer labels set each type's threshold and the examples Claude sees.",
+      ],
+    },
+    {
+      id: "learning-curve",
+      seconds: 15,
+      say: [
+        `We measured it on the real model. One school goes from ${CURVE_ONE_SITE.first} false alarms to ${CURVE_ONE_SITE.last} in four weeks and still catches ${CURVE_ONE_SITE.caught} of ${CURVE_SUMMARY.realTestEvents} real incidents. A school taught only by a store's labels improves just as much.`,
+      ],
+    },
+    {
+      id: "ask",
+      seconds: 8,
+      say: [
+        "We are Sid and Anshul. We built Veil at this hackathon with Next.js, Supabase, and parallel Claude Code agents. Veil: cameras that forget faces.",
+      ],
+    },
+  ];
+
+function cutSlides(): PitchSlide[] {
+  return VIDEO_CUT.map((cut) => {
+    const slide = SLIDES.find((candidate) => candidate.id === cut.id);
+    if (!slide) throw new Error(`Video cut names a missing slide: ${cut.id}`);
+    return { ...slide, seconds: cut.seconds, say: cut.say };
+  });
+}
+
+function totalOf(slides: PitchSlide[]): number {
+  return slides.reduce((total, slide) => total + slide.seconds, 0);
+}
+
+const VIDEO_SLIDES = cutSlides();
+
+export const DECKS: Record<
+  DeckCut,
+  { slides: PitchSlide[]; totalSeconds: number }
+> = {
+  full: { slides: SLIDES, totalSeconds: TOTAL_SECONDS },
+  video: { slides: VIDEO_SLIDES, totalSeconds: totalOf(VIDEO_SLIDES) },
+};

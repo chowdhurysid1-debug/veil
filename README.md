@@ -4,12 +4,13 @@
 
 Veil blurs and encrypts every face in the browser before footage leaves the device. An AI reviews only the blurred frames and flags fights, falls, thefts, and camera tampering. Every time an officer marks an alert real or a false alarm, Veil gets better at every site.
 
-|                         |                                           |
-| ----------------------- | ----------------------------------------- |
-| Live app                | https://veil-iota-ten.vercel.app          |
-| Pitch deck (in the app) | https://veil-iota-ten.vercel.app/pitch    |
-| Measured learning curve | https://veil-iota-ten.vercel.app/learning |
-| Demo video              | _link added at submission_                |
+|                         |                                                  |
+| ----------------------- | ------------------------------------------------ |
+| Live app                | https://veil-iota-ten.vercel.app                 |
+| Pitch deck (in the app) | https://veil-iota-ten.vercel.app/pitch           |
+| Measured learning curve | https://veil-iota-ten.vercel.app/learning        |
+| 2-minute video deck     | https://veil-iota-ten.vercel.app/pitch?cut=video |
+| Demo video              | _link added at submission_                       |
 
 ## Team
 
@@ -129,7 +130,7 @@ Database: run the files in [supabase/migrations](supabase/migrations) in order. 
 | Command                              | What it does                                                  |
 | ------------------------------------ | ------------------------------------------------------------- |
 | `npm run dev`                        | Local server                                                  |
-| `npm test`                           | 264 unit tests (model mocked)                                 |
+| `npm test`                           | 267 unit tests (model mocked)                                 |
 | `npm run evals`                      | Demo-path evals against the real model                        |
 | `npm run evals:learning -- --runs 3` | The learning curve experiment (about 270 model calls per run) |
 | `npm run build`                      | Production build                                              |

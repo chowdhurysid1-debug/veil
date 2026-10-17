@@ -18,12 +18,13 @@ import { cn } from "cn";
 import { VeilLogo } from "@/components/veil/VeilLogo";
 
 import { ChannelCut, MonitorTexture } from "./motion";
-import { SLIDES, TOTAL_SECONDS, type PitchSlide } from "./slides";
+import { DECKS, type DeckCut, type PitchSlide } from "./slides";
 
 const SWIPE_THRESHOLD_PX = 50;
 const TICK_MS = 250;
 
-export function PitchDeck() {
+export function PitchDeck({ cut = "full" }: { cut?: DeckCut }) {
+  const { slides, totalSeconds } = DECKS[cut];
   // `cuts` counts slide changes, so each one replays the channel-cut transition.
   const [nav, setNav] = useState<{
     index: number;
@@ -38,25 +39,29 @@ export function PitchDeck() {
   const hasReadHash = useRef(false);
   const shouldReduceMotion = useReducedMotion();
 
-  const slide = SLIDES[index];
+  const slide = slides[index];
+  const lastIndex = slides.length - 1;
 
-  const goTo = useCallback((next: number) => {
-    setNav((current) => {
-      const clamped = Math.max(0, Math.min(SLIDES.length - 1, next));
-      if (clamped === current.index) return current;
-      return {
-        index: clamped,
-        direction: clamped > current.index ? 1 : -1,
-        cuts: current.cuts + 1,
-      };
-    });
-  }, []);
+  const goTo = useCallback(
+    (next: number) => {
+      setNav((current) => {
+        const clamped = Math.max(0, Math.min(lastIndex, next));
+        if (clamped === current.index) return current;
+        return {
+          index: clamped,
+          direction: clamped > current.index ? 1 : -1,
+          cuts: current.cuts + 1,
+        };
+      });
+    },
+    [lastIndex],
+  );
 
   // Deep links: /pitch#moat opens on the moat slide, and editing the hash jumps.
   useEffect(() => {
     const readHash = () => {
       hasReadHash.current = true;
-      const fromHash = SLIDES.findIndex(
+      const fromHash = slides.findIndex(
         (candidate) => `#${candidate.id}` === window.location.hash,
       );
       if (fromHash >= 0) goTo(fromHash);
@@ -67,7 +72,7 @@ export function PitchDeck() {
       cancelAnimationFrame(frame);
       window.removeEventListener("hashchange", readHash);
     };
-  }, [goTo]);
+  }, [goTo, slides]);
 
   useEffect(() => {
     // Writing before the first read would overwrite a deep link.
@@ -90,7 +95,7 @@ export function PitchDeck() {
         arrowup: () => goTo(index - 1),
         pageup: () => goTo(index - 1),
         home: () => goTo(0),
-        end: () => goTo(SLIDES.length - 1),
+        end: () => goTo(lastIndex),
         n: () => setIsNotesOpen((isOpen) => !isOpen),
         o: () => setIsOverviewOpen((isOpen) => !isOpen),
         t: toggleTimer,
@@ -108,7 +113,7 @@ export function PitchDeck() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goTo, index, toggleTimer, resetTimer]);
+  }, [goTo, index, lastIndex, toggleTimer, resetTimer]);
 
   const handleTouchStart = (event: React.TouchEvent) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -147,6 +152,7 @@ export function PitchDeck() {
             isOverBudget={isOverBudget}
             onToggle={toggleTimer}
             onReset={resetTimer}
+            totalSeconds={totalSeconds}
           />
           <ChromeButton
             label="Speaker notes (N)"
@@ -183,7 +189,7 @@ export function PitchDeck() {
               <motion.section
                 key={slide.id}
                 aria-roledescription="slide"
-                aria-label={`${slideNumber} of ${SLIDES.length}: ${slide.job}`}
+                aria-label={`${slideNumber} of ${slides.length}: ${slide.job}`}
                 className="h-full"
                 exit={
                   shouldReduceMotion
@@ -218,7 +224,7 @@ export function PitchDeck() {
 
       <footer className="relative z-20 flex flex-col gap-3 px-gutter pt-3 pb-5">
         <div className="flex gap-1" role="group" aria-label="Slides">
-          {SLIDES.map((candidate, candidateIndex) => (
+          {slides.map((candidate, candidateIndex) => (
             <button
               key={candidate.id}
               type="button"
@@ -256,12 +262,12 @@ export function PitchDeck() {
               <ChevronLeft className="size-4" aria-hidden />
             </ChromeButton>
             <span className="label-mono px-1 text-center whitespace-nowrap tabular-nums">
-              {slideNumber} / {SLIDES.length}
+              {slideNumber} / {slides.length}
             </span>
             <ChromeButton
               label="Next slide"
               onClick={() => goTo(index + 1)}
-              disabled={index === SLIDES.length - 1}
+              disabled={index === slides.length - 1}
             >
               <ChevronRight className="size-4" aria-hidden />
             </ChromeButton>
@@ -272,6 +278,8 @@ export function PitchDeck() {
       <AnimatePresence>
         {isOverviewOpen && (
           <AnatomyOverlay
+            slides={slides}
+            totalSeconds={totalSeconds}
             activeIndex={index}
             onPick={(picked) => {
               goTo(picked);
@@ -348,12 +356,14 @@ function TimerReadout({
   isOverBudget,
   onToggle,
   onReset,
+  totalSeconds,
 }: {
   elapsed: number;
   isRunning: boolean;
   isOverBudget: boolean;
   onToggle: () => void;
   onReset: () => void;
+  totalSeconds: number;
 }) {
   return (
     <div className="mr-1 flex items-center gap-1">
@@ -371,10 +381,7 @@ function TimerReadout({
         )}
       >
         {formatClock(elapsed)}
-        <span className="hidden sm:inline">
-          {" "}
-          / {formatClock(TOTAL_SECONDS)}
-        </span>
+        <span className="hidden sm:inline"> / {formatClock(totalSeconds)}</span>
       </span>
       <ChromeButton
         label={isRunning ? "Pause timer (T)" : "Start timer (T)"}
@@ -516,10 +523,14 @@ function NotesPanel({
 }
 
 function AnatomyOverlay({
+  slides,
+  totalSeconds,
   activeIndex,
   onPick,
   onClose,
 }: {
+  slides: PitchSlide[];
+  totalSeconds: number;
   activeIndex: number;
   onPick: (index: number) => void;
   onClose: () => void;
@@ -539,8 +550,8 @@ function AnatomyOverlay({
         <div className="flex items-start justify-between gap-6">
           <div className="flex flex-col gap-3">
             <p className="label-mono">
-              Pitch anatomy / {SLIDES.length} parts /{" "}
-              {formatClock(TOTAL_SECONDS)} planned
+              Pitch anatomy / {slides.length} parts /{" "}
+              {formatClock(totalSeconds)} planned
             </p>
             <h2
               id="anatomy-heading"
@@ -554,7 +565,7 @@ function AnatomyOverlay({
           </ChromeButton>
         </div>
         <ol className="grid grid-cols-1 border-t border-l border-hairline sm:grid-cols-2 lg:grid-cols-4">
-          {SLIDES.map((slide, slideIndex) => (
+          {slides.map((slide, slideIndex) => (
             <li key={slide.id} className="border-r border-b border-hairline">
               <button
                 type="button"
