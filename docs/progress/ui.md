@@ -6,6 +6,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - C2: upload screen at /clips/new: drop zone, five-step progress, faces-locked counter, result with blurred filmstrip; mock pipeline hashes the real file. 2db58c6
 - C3: clip view at /clips/[id]: blurred frame player with face-lock boxes, keyboard timeline with event markers, filmstrip, event cards with confidence vs learned threshold. 73e645e
 - Merged main (pipeline A1 to A8). Upload screen now runs `processClip` from `@/lib/video`; deleted the UI's duplicate mock pipeline and hash helper. `PipelineError` messages are shown to the officer as-is. 2e4e777
+- C4: Real / False alarm review with optimistic label, 5 s undo toast (request sent only when the toast closes), success toast "Learned from N new labels across M sites" with the new threshold. 302e373
 
 ## Contract requests
 
