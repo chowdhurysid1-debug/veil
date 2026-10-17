@@ -116,7 +116,7 @@ describe("detectFaces", () => {
   });
 
   // Real hallway footage: the face model found nobody, but people were walking past.
-  it("ignores a face box too big to be a face", async () => {
+  it("ignores a wall-sized face box the model is unsure about", async () => {
     const { FaceDetector } = await import("@mediapipe/tasks-vision");
     const faceModel = await (
       FaceDetector as unknown as {
@@ -125,12 +125,35 @@ describe("detectFaces", () => {
     ).createFromOptions();
     faceModel.detect.mockReturnValueOnce({
       detections: [
-        { boundingBox: { originX: 0, originY: 0, width: 300, height: 300 } },
+        {
+          boundingBox: { originX: 0, originY: 0, width: 300, height: 300 },
+          categories: [{ score: 0.52 }],
+        },
       ],
     });
 
     const result = await detectFaces([makeFakeFrame(0)]);
     expect(result.totalFaces).toBe(0);
+  });
+
+  it("locks a confident close-up face even when it fills much of the frame", async () => {
+    const { FaceDetector } = await import("@mediapipe/tasks-vision");
+    const faceModel = await (
+      FaceDetector as unknown as {
+        createFromOptions: () => Promise<{ detect: ReturnType<typeof vi.fn> }>;
+      }
+    ).createFromOptions();
+    faceModel.detect.mockReturnValueOnce({
+      detections: [
+        {
+          boundingBox: { originX: 200, originY: 100, width: 180, height: 200 },
+          categories: [{ score: 0.7 }],
+        },
+      ],
+    });
+
+    const result = await detectFaces([makeFakeFrame(0)]);
+    expect(result.totalFaces).toBe(1);
   });
 
   it("locks the head of a person whose face the face model misses", async () => {

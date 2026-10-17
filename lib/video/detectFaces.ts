@@ -28,7 +28,10 @@ export type DetectableImage = (
 
 interface Detector {
   detect(image: TexImageSource): {
-    detections: Array<{ boundingBox?: PixelBox }>;
+    detections: Array<{
+      boundingBox?: PixelBox;
+      categories?: Array<{ score: number }>;
+    }>;
   };
 }
 
@@ -101,8 +104,9 @@ export async function detectHeads(
   const { faces, people } = await getDetectors();
   const pixelBoxes: PixelBox[] = [];
 
-  for (const { boundingBox } of faces.detect(image).detections) {
-    if (boundingBox && isPlausibleFace(boundingBox, image.width)) {
+  for (const { boundingBox, categories } of faces.detect(image).detections) {
+    const score = categories?.[0]?.score ?? 1;
+    if (boundingBox && isPlausibleFace(boundingBox, score, image.width)) {
       pixelBoxes.push(boundingBox);
     }
   }
