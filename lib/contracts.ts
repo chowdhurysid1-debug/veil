@@ -11,6 +11,9 @@ export const DEMO_IDENTITY = {
   siteName: "Demo High School",
 } as const;
 
+// Seeded by supabase/ (Demo High School) and used as MOCK_SITES[0], so the UI can upload without a sites endpoint.
+export const DEMO_SITE_ID = "3f2b8c1e-5d4a-4b7e-9c1f-2a6d8e0b4c71";
+
 const sha256Hex = z
   .string()
   .regex(/^[a-f0-9]{64}$/, "Expected a lowercase SHA-256 hex digest.");
