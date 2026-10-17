@@ -98,3 +98,12 @@
     @apply font-sans;
   }
 }
+
+@keyframes veil-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

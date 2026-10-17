@@ -2,20 +2,33 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, CircleCheck, ShieldCheck, Stamp } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ClipDetail } from "@/lib/contracts";
+import type { ClipDetail, ClipEvent, FeedbackLabel } from "@/lib/contracts";
 
 import { veilApi } from "./api";
+import { friendlyErrorMessage } from "./errors";
 import { EventCard } from "./EventCard";
-import { formatStampDateTime, pluralize } from "./format";
+import {
+  EVENT_TYPE_LABELS,
+  FEEDBACK_LABELS,
+  formatConfidence,
+  formatStampDateTime,
+  pluralize,
+} from "./format";
 import { FramePlayer } from "./FramePlayer";
+import { recordLearnedLabel } from "./learningSession";
+import { ReviewControls } from "./ReviewControls";
 import { ErrorState } from "./States";
+import { useToast } from "./Toaster";
 import { useVeilQuery } from "./useVeilQuery";
 
+type ClipUpdater = (update: (clip: ClipDetail) => ClipDetail) => void;
+
 export function ClipView({ clipId }: { clipId: string }) {
-  const { state, retry } = useVeilQuery(clipId, veilApi.getClip);
+  const { state, retry, update } = useVeilQuery(clipId, veilApi.getClip);
 
   if (state.status === "loading") return <ClipViewSkeleton />;
   if (state.status === "error") {
@@ -26,10 +39,19 @@ export function ClipView({ clipId }: { clipId: string }) {
       </div>
     );
   }
-  return <ClipReview key={state.data.id} clip={state.data} />;
+  return (
+    <ClipReview key={state.data.id} clip={state.data} onClipChange={update} />
+  );
 }
 
-function ClipReview({ clip }: { clip: ClipDetail }) {
+function ClipReview({
+  clip,
+  onClipChange,
+}: {
+  clip: ClipDetail;
+  onClipChange: ClipUpdater;
+}) {
+  const { handleLabel, savingIds } = useEventReview(onClipChange);
   const frames = useMemo(
     () => [...clip.frames].sort((a, b) => a.frameIndex - b.frameIndex),
     [clip.frames],
@@ -107,7 +129,13 @@ function ClipReview({ clip }: { clip: ClipDetail }) {
                   tSeconds={frames[index]?.tSeconds ?? 0}
                   isCurrent={event.frameIndex === currentFrameIndex}
                   onJump={() => setCurrentIndex(index)}
-                />
+                >
+                  <ReviewControls
+                    label={event.label}
+                    isSaving={savingIds.has(event.id)}
+                    onLabel={(label) => handleLabel(event, label)}
+                  />
+                </EventCard>
               );
             })
           )}
@@ -115,6 +143,85 @@ function ClipReview({ clip }: { clip: ClipDetail }) {
       </div>
     </div>
   );
+}
+
+const UNDO_WINDOW_MS = 5000;
+
+/**
+ * Optimistic labels with an undo window. The label shows at once; the request
+ * goes out only when the undo notice closes, so Undo never needs a delete route.
+ */
+function useEventReview(onClipChange: ClipUpdater) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [savingIds, setSavingIds] = useState<ReadonlySet<string>>(new Set());
+
+  function setSaving(eventId: string, isSaving: boolean) {
+    setSavingIds((current) => {
+      const next = new Set(current);
+      if (isSaving) next.add(eventId);
+      else next.delete(eventId);
+      return next;
+    });
+  }
+
+  function setLabel(eventId: string, label: FeedbackLabel | null) {
+    onClipChange((clip) => ({
+      ...clip,
+      events: clip.events.map((event) =>
+        event.id === eventId ? { ...event, label } : event,
+      ),
+    }));
+  }
+
+  async function save(event: ClipEvent, label: FeedbackLabel) {
+    try {
+      const { stats } = await veilApi.submitFeedback(event.id, { label });
+      const newLabels = recordLearnedLabel();
+      setSaving(event.id, false);
+      const row = stats.byType.find((item) => item.type === event.type);
+      showToast({
+        tone: "success",
+        title: `Learned from ${pluralize(newLabels, "new label")} across ${pluralize(stats.sitesContributing, "site")}`,
+        description: row
+          ? `${EVENT_TYPE_LABELS[event.type]} alerts now need confidence ${formatConfidence(row.threshold)} or higher, at every site.`
+          : undefined,
+        durationMs: 7000,
+        action: {
+          label: "See learning",
+          onAction: () => router.push("/learning"),
+        },
+      });
+    } catch (error) {
+      setLabel(event.id, null);
+      setSaving(event.id, false);
+      showToast({
+        tone: "error",
+        title: "That label didn't save",
+        description: `${friendlyErrorMessage(error)} The alert is back to unreviewed.`,
+      });
+    }
+  }
+
+  function handleLabel(event: ClipEvent, label: FeedbackLabel) {
+    setLabel(event.id, label);
+    setSaving(event.id, true);
+    showToast({
+      title: `Marked as ${FEEDBACK_LABELS[label].toLowerCase()}`,
+      description: "Saving in 5 seconds. Every site learns from it.",
+      durationMs: UNDO_WINDOW_MS,
+      action: {
+        label: "Undo",
+        onAction: () => {
+          setLabel(event.id, null);
+          setSaving(event.id, false);
+        },
+      },
+      onExpire: () => void save(event, label),
+    });
+  }
+
+  return { handleLabel, savingIds };
 }
 
 function BackLink() {
