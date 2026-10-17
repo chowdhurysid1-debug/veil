@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ChevronDown, LockKeyhole } from "lucide-react";
 
 import type { ClipFrame } from "@/lib/contracts";
 
-import { formatClipTime, pluralize } from "./format";
+import { formatClipTime } from "./format";
 import type { LockedFaceSummary } from "./FramePlayer";
 
 const COLLAPSED_COUNT = 6;
@@ -30,21 +30,20 @@ export function LockedFacesList({
   return (
     <section
       aria-label="Locked faces"
-      className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
+      className="flex flex-col gap-4 border border-hairline bg-panel p-5"
     >
       <div className="flex flex-col gap-1">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
-          <ShieldCheck className="size-4 text-indigo-400" aria-hidden />
-          {pluralize(faces.length, "locked face")}
+        <h2 className="label-mono text-ink">
+          Face vault / {String(faces.length).padStart(2, "0")} locked
         </h2>
-        <p className="text-xs leading-relaxed text-zinc-500">
+        <p className="text-xs leading-relaxed text-ink-muted">
           Each face has its own key. Unlocking one takes a written reason and
           goes in the audit log.
         </p>
       </div>
 
       {faces.length === 0 ? (
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-ink-muted">
           No faces were found in this clip, so there is nothing to unlock.
         </p>
       ) : (
@@ -55,15 +54,15 @@ export function LockedFacesList({
                 <button
                   type="button"
                   onClick={() => onSelect(face)}
-                  className="flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 text-left text-sm text-zinc-300 outline-none transition-all duration-200 hover:border-zinc-600 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="flex h-11 w-full cursor-pointer items-center gap-2 border border-hairline px-3 text-left font-mono text-xs tracking-[0.1em] text-ink-muted uppercase outline-none transition-colors duration-500 ease-veil hover:border-ink hover:text-ink focus-visible:ring-1 focus-visible:ring-signal"
                 >
                   <LockKeyhole
-                    className="size-4 shrink-0 text-indigo-400"
+                    className="size-3.5 shrink-0"
                     aria-hidden
                   />
                   <span className="truncate">
                     Face {index + 1}{" "}
-                    <span className="font-mono text-xs text-zinc-500">
+                    <span className="text-ink-dim">
                       {formatClipTime(timeOf(face.frameIndex))}
                     </span>
                   </span>
@@ -76,7 +75,7 @@ export function LockedFacesList({
               type="button"
               onClick={() => setIsExpanded((expanded) => !expanded)}
               aria-expanded={isExpanded}
-              className="inline-flex w-fit cursor-pointer items-center gap-1 rounded-md text-xs font-medium text-zinc-400 outline-none transition-all duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="label-mono inline-flex w-fit cursor-pointer items-center gap-1 outline-none transition-colors duration-500 ease-veil hover:text-ink focus-visible:ring-1 focus-visible:ring-signal"
             >
               {isExpanded ? "Show fewer" : `Show all ${sorted.length}`}
               <ChevronDown

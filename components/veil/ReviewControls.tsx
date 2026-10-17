@@ -1,7 +1,9 @@
-import { CircleCheck, LoaderCircle, ShieldCheck, Siren } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { FeedbackLabel } from "@/lib/contracts";
+
+import { FEEDBACK_LABELS } from "./format";
 
 interface ReviewControlsProps {
   label: FeedbackLabel | null;
@@ -16,47 +18,36 @@ export function ReviewControls({
 }: ReviewControlsProps) {
   if (label && isSaving) {
     return (
-      <p className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-2.5 text-sm text-zinc-300">
+      <p className="label-mono flex items-center gap-2 border border-hairline px-3 py-3 text-ink-muted">
         <LoaderCircle
-          className="size-4 shrink-0 animate-spin text-indigo-400"
+          className="size-3.5 shrink-0 animate-spin text-signal"
           aria-hidden
         />
-        Saving in a moment. Undo from the notice if that was a mistake.
+        Marked {FEEDBACK_LABELS[label]}. Undo from the notice.
       </p>
     );
   }
 
   if (label) {
     return (
-      <p className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5 text-sm text-emerald-200">
-        <CircleCheck className="size-4 shrink-0 text-emerald-400" aria-hidden />
-        Label saved. Detection at every site learns from it.
+      <p className="label-mono border border-hairline px-3 py-3 text-ink">
+        Decision logged: {FEEDBACK_LABELS[label]}. Every site learns from it.
       </p>
     );
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-zinc-400">
-        Was this a real incident?
-      </p>
+      <p className="label-mono">Was this real?</p>
       <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={() => onLabel("real")}
-          className="hover:border-rose-500/50 hover:bg-rose-500/10 hover:text-rose-100"
-        >
-          <Siren aria-hidden />
+        <Button size="lg" onClick={() => onLabel("real")}>
           Real
         </Button>
         <Button
           variant="secondary"
           size="lg"
           onClick={() => onLabel("false_alarm")}
-          className="hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-100"
         >
-          <ShieldCheck aria-hidden />
           False alarm
         </Button>
       </div>

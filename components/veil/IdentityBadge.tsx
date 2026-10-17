@@ -23,7 +23,7 @@ export function IdentityBadge({
       <span
         title={DEMO_IDENTITY.actor}
         className={cn(
-          "grid size-8 place-items-center rounded-full bg-zinc-800 text-xs font-semibold text-zinc-200 ring-1 ring-zinc-700",
+          "grid size-8 place-items-center border border-hairline-strong font-mono text-[10px] tracking-[0.1em] text-ink",
           className,
         )}
       >
@@ -36,19 +36,19 @@ export function IdentityBadge({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3",
+        "flex items-center gap-3 border border-hairline p-3",
         className,
       )}
     >
       <span
         aria-hidden
-        className="grid size-9 shrink-0 place-items-center rounded-full bg-zinc-800 text-sm font-semibold text-zinc-200 ring-1 ring-zinc-700"
+        className="grid size-9 shrink-0 place-items-center border border-hairline-strong font-mono text-xs tracking-[0.1em] text-ink"
       >
         {INITIALS}
       </span>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-zinc-100">{ROLE}</p>
-        <p className="truncate text-xs text-zinc-500">
+        <p className="truncate text-sm text-ink">{ROLE}</p>
+        <p className="label-mono truncate">
           {DEMO_IDENTITY.siteName}
         </p>
       </div>

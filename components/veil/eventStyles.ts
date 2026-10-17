@@ -31,18 +31,18 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   false_alarm: "False alarm",
 };
 
-/** Pill classes per status. Amber = needs a human, rose = real incident. */
+/** Tag classes per status. Signal = needs a human; everything settled is monochrome. */
 export const EVENT_STATUS_CLASSES: Record<EventStatus, string> = {
-  flagged: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  below: "border-zinc-700 bg-zinc-800/60 text-zinc-400",
-  real: "border-rose-500/30 bg-rose-500/10 text-rose-300",
-  false_alarm: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  flagged: "border-signal/60 text-signal",
+  below: "border-hairline-strong text-ink-dim",
+  real: "border-ink text-ink",
+  false_alarm: "border-hairline-strong text-ink-muted",
 };
 
 /** Timeline marker colors per status. */
 export const EVENT_MARKER_CLASSES: Record<EventStatus, string> = {
-  flagged: "bg-amber-400 ring-amber-400/30",
-  below: "bg-zinc-500 ring-zinc-500/20",
-  real: "bg-rose-400 ring-rose-400/30",
-  false_alarm: "bg-emerald-400 ring-emerald-400/30",
+  flagged: "bg-signal",
+  below: "bg-ink-dim",
+  real: "bg-ink",
+  false_alarm: "border border-ink-muted bg-void",
 };

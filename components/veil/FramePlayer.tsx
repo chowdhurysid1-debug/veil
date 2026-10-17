@@ -6,6 +6,7 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent,
+  type ReactNode,
 } from "react";
 import {
   ChevronLeft,
@@ -34,6 +35,8 @@ interface FramePlayerProps {
   currentIndex: number;
   onSeek: (index: number) => void;
   onFaceSelect?: (face: LockedFaceSummary) => void;
+  /** Rendered directly under the frame, above the transport controls. */
+  afterFrame?: ReactNode;
 }
 
 export function FramePlayer({
@@ -43,6 +46,7 @@ export function FramePlayer({
   currentIndex,
   onSeek,
   onFaceSelect,
+  afterFrame,
 }: FramePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const lastIndex = frames.length - 1;
@@ -81,7 +85,7 @@ export function FramePlayer({
 
   return (
     <section aria-label="Blurred frames" className="flex flex-col gap-4">
-      <div className="relative aspect-video overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/40">
+      <div className="relative aspect-video overflow-hidden border border-hairline bg-panel">
         <FrameImage
           src={frame.blurredUrl}
           alt={`Blurred frame ${currentIndex + 1} of ${frames.length}, at ${formatClipTime(frame.tSeconds)}`}
@@ -96,9 +100,13 @@ export function FramePlayer({
             height: `${face.bbox.height * 100}%`,
           };
           const content = (
-            <span className="absolute -top-2.5 -right-2.5 grid size-6 place-items-center rounded-full bg-zinc-950 text-indigo-300 ring-1 ring-indigo-400/60">
-              <LockKeyhole className="size-3.5" aria-hidden />
-            </span>
+            <>
+              <FaceBrackets />
+              <span className="absolute -top-5 left-0 flex items-center gap-1 bg-void/80 px-1 font-mono text-[10px] tracking-[0.14em] text-ink uppercase">
+                <LockKeyhole className="size-2.5" aria-hidden />
+                Locked
+              </span>
+            </>
           );
           return onFaceSelect ? (
             <button
@@ -107,7 +115,7 @@ export function FramePlayer({
               style={style}
               onClick={() => onFaceSelect(face)}
               aria-label="Locked face. Unlock with a reason."
-              className="absolute cursor-pointer rounded-lg border-2 border-indigo-400/70 bg-indigo-500/10 outline-none transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-500/20 focus-visible:ring-2 focus-visible:ring-white"
+              className="group/face absolute cursor-pointer bg-white/[0.03] outline-none transition-all duration-500 ease-veil hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-signal"
             >
               {content}
             </button>
@@ -116,38 +124,53 @@ export function FramePlayer({
               key={face.id}
               style={style}
               aria-hidden
-              className="absolute rounded-lg border-2 border-indigo-400/70 bg-indigo-500/10"
+              className="absolute bg-white/[0.03]"
             >
               {content}
             </span>
           );
         })}
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-          <span className="rounded-lg bg-zinc-950/80 px-2 py-1 font-mono text-xs text-zinc-200 backdrop-blur-sm">
-            {formatClipTime(frame.tSeconds)} · frame {currentIndex + 1}/
-            {frames.length}
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-void/80 to-transparent p-3 sm:p-4">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-ink uppercase tabular-nums sm:text-xs">
+            T+{formatClipTime(frame.tSeconds)}
+            <span className="text-ink-dim">
+              {" "}
+              / Frame {String(currentIndex + 1).padStart(2, "0")} of{" "}
+              {String(frames.length).padStart(2, "0")}
+            </span>
           </span>
           {eventsInFrame.length > 0 && (
-            <span className="rounded-lg bg-amber-500/90 px-2 py-1 text-xs font-semibold text-zinc-950">
+            <span className="flex items-center gap-2 border border-signal/60 bg-void/70 px-2 py-1 font-mono text-[10px] tracking-[0.14em] text-signal uppercase sm:text-xs">
+              <span
+                aria-hidden
+                className="size-1.5 animate-veil-blink rounded-full bg-signal"
+              />
               {eventsInFrame
                 .map((event) => EVENT_TYPE_LABELS[event.type])
                 .join(", ")}{" "}
-              detected here
+              detected
             </span>
           )}
         </div>
-        <span className="pointer-events-none absolute right-3 bottom-3 hidden items-center sm:inline-flex gap-1.5 rounded-lg bg-zinc-950/80 px-2 py-1 text-xs text-zinc-300 backdrop-blur-sm">
-          <LockKeyhole className="size-3 text-emerald-400" aria-hidden />
-          Blurred before upload
-        </span>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-void/80 to-transparent p-3 sm:p-4">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-ink uppercase sm:text-xs">
+            Faces in frame {String(facesInFrame.length).padStart(2, "0")}
+          </span>
+          <span className="hidden items-center gap-1.5 font-mono text-[10px] tracking-[0.14em] text-ink-muted uppercase sm:inline-flex sm:text-xs">
+            <LockKeyhole className="size-3" aria-hidden />
+            Blurred before upload
+          </span>
+        </div>
       </div>
+
+      {afterFrame}
 
       <div className="flex items-center gap-2">
         <Button
           variant="secondary"
           size="icon-lg"
-          className="size-11 rounded-xl"
+          className="size-11"
           onClick={togglePlay}
           aria-label={isPlaying ? "Pause" : "Play frames"}
         >
@@ -156,7 +179,7 @@ export function FramePlayer({
         <Button
           variant="ghost"
           size="icon-lg"
-          className="size-11 rounded-xl"
+          className="size-11"
           onClick={() => step(-1)}
           disabled={currentIndex === 0}
           aria-label="Previous frame"
@@ -166,14 +189,14 @@ export function FramePlayer({
         <Button
           variant="ghost"
           size="icon-lg"
-          className="size-11 rounded-xl"
+          className="size-11"
           onClick={() => step(1)}
           disabled={currentIndex === lastIndex}
           aria-label="Next frame"
         >
           <ChevronRight aria-hidden />
         </Button>
-        <span className="ml-auto font-mono text-xs text-zinc-500 tabular-nums">
+        <span className="ml-auto font-mono text-xs tracking-[0.14em] text-ink-dim tabular-nums">
           {formatClipTime(frame.tSeconds)} / {formatClipTime(endSeconds)}
         </span>
       </div>
@@ -203,10 +226,10 @@ export function FramePlayer({
               aria-label={`Frame ${index + 1} at ${formatClipTime(thumb.tSeconds)}`}
               aria-current={index === currentIndex ? "true" : undefined}
               className={cn(
-                "block aspect-video w-16 cursor-pointer overflow-hidden rounded-md outline-none ring-1 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400",
+                "block aspect-video w-16 cursor-pointer overflow-hidden outline-none ring-1 transition-all duration-500 ease-veil focus-visible:ring-2 focus-visible:ring-signal",
                 index === currentIndex
-                  ? "ring-2 ring-indigo-500"
-                  : "opacity-60 ring-zinc-800 hover:opacity-100 hover:ring-zinc-600",
+                  ? "ring-1 ring-ink"
+                  : "opacity-40 ring-hairline hover:opacity-100 hover:ring-hairline-strong",
               )}
             >
               <FrameImage src={thumb.blurredUrl} alt="" />
@@ -276,14 +299,14 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
             >
               <span
                 className={cn(
-                  "size-3.5 rotate-45 rounded-[3px] ring-4 transition-all duration-200 group-hover:scale-125 group-focus-visible:ring-indigo-400",
+                  "size-2.5 rotate-45 ring-0 transition-all duration-500 ease-veil group-hover:scale-125 group-focus-visible:ring-1 group-focus-visible:ring-signal",
                   EVENT_MARKER_CLASSES[status],
                 )}
               />
               <span
                 className={cn(
                   "mt-0.5 h-3 w-px",
-                  status === "below" ? "bg-zinc-600" : "bg-amber-400/60",
+                  status === "below" ? "bg-hairline-strong" : "bg-signal/60",
                 )}
               />
             </button>
@@ -309,10 +332,11 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
             seekToPointer(event);
           }
         }}
-        className="relative h-3 cursor-pointer touch-none rounded-full bg-zinc-800 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="relative h-3 cursor-pointer touch-none outline-none focus-visible:ring-1 focus-visible:ring-signal"
       >
+        <div aria-hidden className="absolute inset-x-0 top-1/2 h-px bg-hairline-strong" />
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-indigo-500/40"
+          className="absolute top-1/2 left-0 h-px bg-ink"
           style={{ width: position(currentIndex) }}
         />
         {events.map((event) => (
@@ -320,15 +344,28 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
             key={event.id}
             aria-hidden
             style={{ left: position(indexOfFrame(event.frameIndex)) }}
-            className="absolute inset-y-0 w-1 -translate-x-1/2 rounded-full bg-amber-400/70"
+            className="absolute inset-y-0 w-px -translate-x-1/2 bg-signal"
           />
         ))}
         <span
           aria-hidden
           style={{ left: position(currentIndex) }}
-          className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-indigo-500 shadow-lg shadow-indigo-500/40"
+          className="absolute top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-ink after:absolute after:top-1/2 after:left-1/2 after:size-2 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border after:border-ink after:bg-void"
         />
       </div>
     </div>
+  );
+}
+
+/** Targeting brackets on the four corners of a locked face. */
+function FaceBrackets() {
+  const corner = "absolute size-2.5 border-ink transition-all duration-500 ease-veil group-hover/face:size-3.5";
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-0">
+      <span className={cn(corner, "top-0 left-0 border-t border-l")} />
+      <span className={cn(corner, "top-0 right-0 border-t border-r")} />
+      <span className={cn(corner, "bottom-0 left-0 border-b border-l")} />
+      <span className={cn(corner, "right-0 bottom-0 border-r border-b")} />
+    </span>
   );
 }

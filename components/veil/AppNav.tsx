@@ -26,7 +26,7 @@ export function NavLinks({ orientation, activeHref }: NavLinksProps) {
     <ul
       className={cn(
         "flex",
-        isVertical ? "flex-col gap-1" : "gap-1 overflow-x-auto",
+        isVertical ? "flex-col" : "gap-1 overflow-x-auto",
       )}
     >
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -37,20 +37,19 @@ export function NavLinks({ orientation, activeHref }: NavLinksProps) {
               href={href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center rounded-lg font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500",
+                "relative flex items-center font-mono text-xs tracking-[0.14em] uppercase outline-none transition-colors duration-500 ease-veil focus-visible:ring-1 focus-visible:ring-signal",
                 isVertical
-                  ? "gap-3 px-3 py-2.5 text-sm"
-                  : "justify-center gap-1 px-1.5 py-2 text-xs whitespace-nowrap",
+                  ? "gap-3 border-l px-4 py-3"
+                  : "justify-center gap-1.5 border-b px-1.5 py-2.5 whitespace-nowrap",
                 isActive
-                  ? "bg-zinc-900 text-white ring-1 ring-zinc-800"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-white",
+                  ? "border-ink text-ink"
+                  : "border-transparent text-ink-dim hover:text-ink",
               )}
             >
               <Icon
                 className={cn(
                   "shrink-0",
-                  isVertical ? "size-4.5" : "size-4",
-                  isActive && "text-indigo-400",
+                  isVertical ? "size-3.5" : "size-3.5",
                 )}
                 aria-hidden
               />

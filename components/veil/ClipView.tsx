@@ -3,13 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  CircleCheck,
-  FileCheck,
-  ShieldCheck,
-  Stamp,
-} from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
@@ -30,14 +24,14 @@ import {
   pluralize,
 } from "./format";
 import { FramePlayer, type LockedFaceSummary } from "./FramePlayer";
-import { recordLearnedLabel } from "./learningSession";
-import { LearningSummaryCard } from "./LearningSummaryCard";
+import { getSessionLabelCount, recordLearnedLabel } from "./learningSession";
 import { LockedFacesList } from "./LockedFacesList";
 import { ReviewControls } from "./ReviewControls";
 import { ErrorState } from "./States";
 import { useToast } from "./Toaster";
 import { UnlockFaceDialog } from "./UnlockFaceDialog";
 import { useVeilQuery } from "./useVeilQuery";
+import { WhatItLearned } from "./WhatItLearned";
 
 type ClipUpdater = (update: (clip: ClipDetail) => ClipDetail) => void;
 
@@ -67,8 +61,30 @@ function ClipReview({
 }) {
   const learning = useVeilQuery("learning", veilApi.getLearningStats);
   const updateLearning = learning.update;
-  const { handleLabel, savingIds } = useEventReview(onClipChange, (stats) =>
-    updateLearning(() => stats),
+  const learningBefore =
+    learning.state.status === "success" ? learning.state.data : null;
+  const { handleLabel, savingIds } = useEventReview(
+    onClipChange,
+    (stats, event, label) => {
+      const thresholdOf = (source: LearningStats | null) =>
+        source?.byType.find((row) => row.type === event.type)?.threshold ??
+        null;
+      recordLearnedLabel({
+        eventType: event.type,
+        label,
+        thresholdBefore: thresholdOf(learningBefore),
+        thresholdAfter: thresholdOf(stats),
+        at: new Date().toISOString(),
+      });
+      updateLearning(() => stats);
+      // On narrow screens the panel sits below the footage; bring it into view
+      // so the officer sees what their label changed.
+      if (window.matchMedia("(max-width: 1023px)").matches) {
+        document
+          .getElementById("what-it-learned")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    },
   );
   const frames = useMemo(
     () => [...clip.frames].sort((a, b) => a.frameIndex - b.frameIndex),
@@ -99,34 +115,68 @@ function ClipReview({
     setIsUnlockOpen(true);
   }
 
+  const alerts =
+    events.length === 0 ? (
+      <div className="flex flex-col gap-2 border border-hairline bg-panel p-5">
+        <p className="label-mono text-ink">Nothing flagged in this clip</p>
+        <p className="text-sm leading-relaxed text-ink-muted">
+          If analysis was unavailable, scrub the timeline to review it yourself.
+          Every face stays blurred either way.
+        </p>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-3">
+        {events.map((event) => {
+          const index = indexOfFrame(event.frameIndex);
+          return (
+            <EventCard
+              key={event.id}
+              event={event}
+              tSeconds={frames[index]?.tSeconds ?? 0}
+              isCurrent={event.frameIndex === currentFrameIndex}
+              onJump={() => setCurrentIndex(index)}
+            >
+              <ReviewControls
+                label={event.label}
+                isSaving={savingIds.has(event.id)}
+                onLabel={(label) => handleLabel(event, label)}
+              />
+            </EventCard>
+          );
+        })}
+      </div>
+    );
+
   return (
-    <div className="flex flex-col gap-6">
-      <BackLink />
-      <header className="flex flex-col gap-3">
-        <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-white md:text-2xl">
-          {clip.filename}
-        </h1>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-zinc-500">{clip.siteName}</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-0.5 font-medium text-zinc-300">
-            <Stamp className="size-3.5" aria-hidden />
-            Stamped {formatStampDateTime(clip.stampedAt)}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 font-medium text-indigo-300">
-            <ShieldCheck className="size-3.5" aria-hidden />
-            {pluralize(clip.facesLocked, "face")} locked, 0 in the clear
-          </span>
-          <Link
-            href={`/verify?clip=${clip.id}`}
-            className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-medium text-zinc-400 outline-none transition-all duration-200 hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            <FileCheck className="size-3.5" aria-hidden />
-            Verify footage
-          </Link>
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-6 border-b border-hairline pb-8">
+        <BackLink />
+        <div className="flex flex-col gap-3">
+          <p className="label-mono">Clip review / {clip.siteName}</p>
+          <h1 className="font-display text-headline font-bold break-all text-ink">
+            {clip.filename.replace(/\.[^.]+$/, "")}
+          </h1>
         </div>
+        <dl className="flex flex-wrap gap-x-10 gap-y-4">
+          <Readout label="Stamped" value={formatStampDateTime(clip.stampedAt)} />
+          <Readout
+            label="Faces locked"
+            value={String(clip.facesLocked).padStart(2, "0")}
+          />
+          <Readout label="Stored in the clear" value="00" />
+          <div className="flex flex-col justify-end">
+            <Link
+              href={`/verify?clip=${clip.id}`}
+              className="label-mono inline-flex items-center gap-1.5 text-ink-muted outline-none transition-colors duration-500 ease-veil hover:text-ink focus-visible:ring-1 focus-visible:ring-signal"
+            >
+              Verify footage
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </Link>
+          </div>
+        </dl>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_var(--spacing-rail)]">
         <FramePlayer
           frames={frames}
           events={events}
@@ -134,59 +184,24 @@ function ClipReview({
           currentIndex={currentIndex}
           onSeek={setCurrentIndex}
           onFaceSelect={openUnlock}
+          afterFrame={alerts}
         />
 
-        <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-zinc-300">
-            {events.length === 0
-              ? "Alerts"
-              : `${pluralize(events.length, "alert")} in this clip`}
-          </h2>
-          {events.length === 0 ? (
-            <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-zinc-800 p-5">
-              <CircleCheck className="size-5 text-emerald-400" aria-hidden />
-              <p className="text-sm font-medium text-zinc-200">
-                Nothing flagged in this clip
-              </p>
-              <p className="text-sm leading-relaxed text-zinc-500">
-                If analysis was unavailable, scrub the timeline to review it
-                yourself. Every face stays blurred either way.
-              </p>
-            </div>
-          ) : (
-            events.map((event) => {
-              const index = indexOfFrame(event.frameIndex);
-              return (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  tSeconds={frames[index]?.tSeconds ?? 0}
-                  isCurrent={event.frameIndex === currentFrameIndex}
-                  onJump={() => setCurrentIndex(index)}
-                >
-                  <ReviewControls
-                    label={event.label}
-                    isSaving={savingIds.has(event.id)}
-                    onLabel={(label) => handleLabel(event, label)}
-                  />
-                </EventCard>
-              );
-            })
-          )}
-          <LockedFacesList
-            faces={clip.faces}
-            frames={frames}
-            onSelect={openUnlock}
-          />
+        <aside className="flex flex-col gap-8 lg:sticky lg:top-6 lg:self-start">
           {learning.state.status !== "error" && (
-            <LearningSummaryCard
+            <WhatItLearned
               stats={
                 learning.state.status === "success" ? learning.state.data : null
               }
               focusType={(firstFlagged ?? events[0])?.type ?? null}
             />
           )}
-        </div>
+          <LockedFacesList
+            faces={clip.faces}
+            frames={frames}
+            onSelect={openUnlock}
+          />
+        </aside>
       </div>
 
       <UnlockFaceDialog
@@ -203,6 +218,17 @@ function ClipReview({
   );
 }
 
+function Readout({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <dt className="label-mono">{label}</dt>
+      <dd className="font-mono text-sm tracking-[0.06em] text-ink tabular-nums uppercase">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 const UNDO_WINDOW_MS = 5000;
 
 /**
@@ -211,7 +237,11 @@ const UNDO_WINDOW_MS = 5000;
  */
 function useEventReview(
   onClipChange: ClipUpdater,
-  onLearned: (stats: LearningStats) => void,
+  onLearned: (
+    stats: LearningStats,
+    event: ClipEvent,
+    label: FeedbackLabel,
+  ) => void,
 ) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -238,9 +268,9 @@ function useEventReview(
   async function save(event: ClipEvent, label: FeedbackLabel) {
     try {
       const { stats } = await veilApi.submitFeedback(event.id, { label });
-      const newLabels = recordLearnedLabel();
+      onLearned(stats, event, label);
+      const newLabels = getSessionLabelCount();
       setSaving(event.id, false);
-      onLearned(stats);
       const row = stats.byType.find((item) => item.type === event.type);
       showToast({
         tone: "success",
@@ -290,9 +320,9 @@ function BackLink() {
   return (
     <Link
       href="/clips"
-      className="inline-flex w-fit items-center gap-1.5 rounded-lg text-sm text-zinc-400 outline-none transition-all duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+      className="label-mono inline-flex w-fit items-center gap-1.5 text-ink-muted outline-none transition-colors duration-500 ease-veil hover:text-ink focus-visible:ring-1 focus-visible:ring-signal"
     >
-      <ArrowLeft className="size-4" aria-hidden />
+      <ArrowLeft className="size-3.5" aria-hidden />
       All clips
     </Link>
   );

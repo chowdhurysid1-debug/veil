@@ -1,0 +1,169 @@
+/*
+ * Veil design tokens. Every color, type size, space, radius and motion value
+ * lives here. Look: near-black, off-white, hairlines, monospace data labels,
+ * and ONE accent ("signal") reserved for live alerts and learning.
+ *
+ * The existing screens were written with Tailwind's zinc, indigo, emerald,
+ * amber and rose classes. Rather than rewrite every class, those palettes are
+ * remapped below: zinc becomes the neutral void ramp, indigo and emerald become
+ * monochrome ink, amber and rose become the signal accent. New code should use
+ * the semantic names (void, panel, hairline, ink, signal) instead.
+ */
+
+@theme {
+  /* ---------- Semantic colors ---------- */
+  --color-void: #060606; /* page background */
+  --color-panel: #0d0d0c; /* raised surface */
+  --color-panel-2: #141413; /* inset / hover surface */
+  --color-hairline: #262624; /* 1px borders */
+  --color-hairline-strong: #3a3a36;
+  --color-ink: #efeee9; /* primary text, off-white */
+  --color-ink-muted: #9a9993; /* secondary text */
+  --color-ink-dim: #7f7e78; /* labels, captions: 4.6:1 on void, holds up on projectors */
+  --color-signal: #ffb000; /* the one accent: live + learning */
+  --color-signal-dim: #a86b00;
+  --color-signal-wash: rgb(255 176 0 / 0.08);
+
+  /* Off-white instead of pure white everywhere text-white is used. */
+  --color-white: #efeee9;
+
+  /* ---------- Remapped legacy palettes ---------- */
+  --color-zinc-50: #f2f1ec;
+  --color-zinc-100: #e6e5e0;
+  --color-zinc-200: #d2d1cb;
+  --color-zinc-300: #b5b4ad;
+  --color-zinc-400: #8e8d87;
+  --color-zinc-500: #6c6b66;
+  --color-zinc-600: #4c4b47;
+  --color-zinc-700: #33332f;
+  --color-zinc-800: #222220;
+  --color-zinc-900: #111110;
+  --color-zinc-950: #060606;
+
+  --color-indigo-50: #fafaf7;
+  --color-indigo-100: #f4f3ef;
+  --color-indigo-200: #ecebe6;
+  --color-indigo-300: #dddcd6;
+  --color-indigo-400: #c9c8c1;
+  --color-indigo-500: #b4b3ab;
+  --color-indigo-600: #8f8e87;
+  --color-indigo-700: #6b6a64;
+  --color-indigo-800: #46453f;
+  --color-indigo-900: #2a2a27;
+  --color-indigo-950: #161614;
+
+  --color-emerald-50: #fafaf7;
+  --color-emerald-100: #f4f3ef;
+  --color-emerald-200: #ecebe6;
+  --color-emerald-300: #dddcd6;
+  --color-emerald-400: #c9c8c1;
+  --color-emerald-500: #b4b3ab;
+  --color-emerald-600: #8f8e87;
+  --color-emerald-700: #6b6a64;
+  --color-emerald-800: #46453f;
+  --color-emerald-900: #2a2a27;
+  --color-emerald-950: #161614;
+
+  --color-amber-50: #fff8e6;
+  --color-amber-100: #ffefc2;
+  --color-amber-200: #ffe08a;
+  --color-amber-300: #ffcf4d;
+  --color-amber-400: #ffbe1f;
+  --color-amber-500: #ffb000;
+  --color-amber-600: #d98f00;
+  --color-amber-700: #a86b00;
+  --color-amber-800: #7a4d00;
+  --color-amber-900: #4d3000;
+  --color-amber-950: #2b1b00;
+
+  --color-rose-50: #fff8e6;
+  --color-rose-100: #ffefc2;
+  --color-rose-200: #ffe08a;
+  --color-rose-300: #ffcf4d;
+  --color-rose-400: #ffbe1f;
+  --color-rose-500: #ffb000;
+  --color-rose-600: #d98f00;
+  --color-rose-700: #a86b00;
+  --color-rose-800: #7a4d00;
+  --color-rose-900: #4d3000;
+  --color-rose-950: #2b1b00;
+
+  /* ---------- Type scale ---------- */
+  /* Display: one per screen, uppercase, scales from phone to projector. */
+  --text-display: clamp(2.75rem, 7.5vw, 7.5rem);
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.035em;
+  --text-headline: clamp(2rem, 4.5vw, 4rem);
+  --text-headline--line-height: 0.95;
+  --text-headline--letter-spacing: -0.03em;
+  --text-title: clamp(1.25rem, 2vw, 1.75rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
+  /* Huge counters in the learning panel. */
+  --text-counter: clamp(3.5rem, 6vw, 5.5rem);
+  --text-counter--line-height: 0.9;
+  --text-counter--letter-spacing: -0.04em;
+  /* Monospace data labels: MODEL CONFIDENCE 71%. */
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.14em;
+
+  /* ---------- Spacing ---------- */
+  --spacing-gutter: clamp(1rem, 3vw, 2.5rem);
+  --spacing-section: clamp(5rem, 14vh, 10rem);
+  --spacing-rail: 380px;
+
+  /* ---------- Motion: slow and confident, never bouncy ---------- */
+  --ease-veil: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-veil-fade: veil-fade 0.9s var(--ease-veil) both;
+  --animate-veil-blink: veil-blink 2.4s ease-in-out infinite;
+}
+
+/* Fonts are set in app/layout.tsx and referenced here. */
+@theme inline {
+  --font-display: var(--font-inter-tight);
+  --font-sans: var(--font-inter-tight);
+  --font-heading: var(--font-inter-tight);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+/* Shared motion values for framer-motion live in components/veil/motion.ts and
+   must match --ease-veil above. */
+
+@keyframes veil-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes veil-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Monospace data label: small, uppercase, wide-tracked. */
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+}
+
+/* Big uppercase display headline. */
+@utility headline-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+}
