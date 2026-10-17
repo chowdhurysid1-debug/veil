@@ -44,3 +44,6 @@ next-env.d.ts
 
 # claude -w worktrees (full repo copies)
 .claude/worktrees/
+
+# Playwright MCP browser-test artifacts
+.playwright-mcp/
