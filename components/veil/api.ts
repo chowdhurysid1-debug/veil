@@ -49,4 +49,7 @@ export const veilApi: VeilApi = {
   getClip: httpBackend.getClip,
   createClip: httpBackend.createClip,
   analyzeClip: httpBackend.analyzeClip,
+  // Review and learning: clip view labels, learning card, /learning.
+  submitFeedback: httpBackend.submitFeedback,
+  getLearningStats: httpBackend.getLearningStats,
 };
