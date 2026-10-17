@@ -2,6 +2,22 @@
 
 One line per finished milestone: id, what shipped, commit hash.
 
+## API for Tab C (C9)
+
+Every body and response matches `lib/contracts.ts`. Every error is `{ error }` with a sentence safe to show. Responses send `Cache-Control: no-store`. Until Supabase is configured, every route answers 503 with a friendly error.
+
+| Route                           | Body                                                                             | Returns                                                                                                                                                                                            |
+| ------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/clips`               | `CreateClipRequest` (`processClip` output plus `siteId`: use `MOCK_SITES[0].id`) | 201 `CreateClipResponse`; 400 bad upload, 404 unknown site, 413 over 4.4 MB                                                                                                                        |
+| `GET /api/clips`                | none                                                                             | `ClipSummary[]`, newest first, seed clips hidden                                                                                                                                                   |
+| `GET /api/clips/:id`            | none                                                                             | `ClipDetail`; frame URLs expire in 10 minutes                                                                                                                                                      |
+| `POST /api/clips/:id/analyze`   | none                                                                             | `AnalyzeResponse`; `isFallback: true` with no events means "Analysis unavailable, review manually". Safe to call twice: it returns the stored result                                               |
+| `POST /api/events/:id/feedback` | `FeedbackRequest`                                                                | `FeedbackResponse` with fresh stats. No delete: for undo, delay the POST until the toast closes, or send the other label                                                                           |
+| `GET /api/learning/stats`       | none                                                                             | `LearningStats` (all five types; `history` is cumulative)                                                                                                                                          |
+| `POST /api/faces/:id/unlock`    | `UnlockRequest`                                                                  | `UnlockResponse`; 400 carries the "at least 15 characters" message. Fetch `ciphertextUrl` within 30 s, base64 the bytes, then call Tab A's `decryptFace(ciphertextBase64, rawKeyBase64, ivBase64)` |
+| `GET /api/audit`                | none                                                                             | `AuditEntry[]`, newest first                                                                                                                                                                       |
+| `POST /api/clips/:id/verify`    | `VerifyRequest` (`sha256File(file)` from `lib/crypto/hash`)                      | `VerifyResponse`                                                                                                                                                                                   |
+
 ## Contract requests
 
 1. Add `DEMO_SITE_ID = "3f2b8c1e-5d4a-4b7e-9c1f-2a6d8e0b4c71"` next to `DEMO_IDENTITY` in `lib/contracts.ts`. `POST /api/clips` needs a `siteId`, and the seed creates Demo High School with exactly this id (the same id `MOCK_SITES[0]` uses), so the UI can send it without a sites endpoint.
