@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "evals": "tsx scripts/evals.mts"
+    "evals": "tsx scripts/evals.mts",
+    "evals:learning": "tsx scripts/learning-curve.mts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "4.0.78",

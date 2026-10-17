@@ -1,0 +1,634 @@
+{
+  "about": "Does Veil get better with use? A school and a store each review four weeks of alerts. An officer labels only what gets flagged, the way the app works. After each week, the same 16 school test clips are scored. Every clip is a written description of blurred frames, in the format npm run evals uses. Written by the Veil team on 2026-10-17 and frozen before the first run.",
+  "weeks": 4,
+  "stream": [
+    {
+      "id": "s1-school-hug-entrance",
+      "week": 1,
+      "site": "school",
+      "frames": [
+        "Students walk in through the front entrance of a school.",
+        "Two students walk toward each other from opposite sides of the lobby.",
+        "The two students wrap their arms around each other.",
+        "They stay pressed together, rocking slightly.",
+        "They let go and walk to class side by side."
+      ],
+      "truth": [],
+      "note": "Hug before first period."
+    },
+    {
+      "id": "s1-school-tie-shoe",
+      "week": 1,
+      "site": "school",
+      "frames": [
+        "A student walks along a row of lockers.",
+        "The student stops and drops quickly to one knee.",
+        "The student is low to the floor, hands down by one foot.",
+        "The student is still crouched next to the lockers.",
+        "The student stands up and keeps walking."
+      ],
+      "truth": [],
+      "note": "Tying a shoe."
+    },
+    {
+      "id": "s1-school-shove-hallway",
+      "week": 1,
+      "site": "school",
+      "frames": [
+        "Two students stand close together in a crowded hallway.",
+        "One student shoves the other in the chest with both hands.",
+        "The shoved student stumbles back into a locker, then lunges forward.",
+        "Both students grab each other's shirts and pull back and forth.",
+        "A teacher pushes between them while other students step away."
+      ],
+      "truth": ["fight"],
+      "note": "Fight. Both students sent to the office."
+    },
+    {
+      "id": "s1-school-stairs-fall",
+      "week": 1,
+      "site": "school",
+      "frames": [
+        "A student walks down a staircase carrying a stack of books.",
+        "The student's foot misses a step.",
+        "The student tumbles down the last several steps.",
+        "The student lies at the bottom of the stairs with books scattered around.",
+        "The student is still on the floor, holding one ankle."
+      ],
+      "truth": ["fall"],
+      "note": "Nurse called."
+    },
+    {
+      "id": "s1-store-kneel-bottom-shelf",
+      "week": 1,
+      "site": "store",
+      "frames": [
+        "A person pushes a cart down a grocery aisle.",
+        "The person stops and drops down onto both knees.",
+        "The person is down on the floor, reaching under the lowest shelf.",
+        "The person stays low, pulling items toward them.",
+        "The person stands up and puts two cans in the cart."
+      ],
+      "truth": [],
+      "note": "Reaching the bottom shelf."
+    },
+    {
+      "id": "s1-store-own-water-bottle",
+      "week": 1,
+      "site": "store",
+      "frames": [
+        "A person with a tote bag walks into a pharmacy aisle, holding a metal water bottle.",
+        "The person sets the water bottle on a shelf and looks at boxes nearby.",
+        "The person picks the same water bottle back up off the shelf.",
+        "The person pushes the water bottle down into the tote bag.",
+        "The person walks out of the aisle toward the front of the store."
+      ],
+      "truth": [],
+      "note": "Their own bottle. They brought it in."
+    },
+    {
+      "id": "s1-store-shoplift-bag",
+      "week": 1,
+      "site": "store",
+      "frames": [
+        "A person walks slowly down a cosmetics aisle, glancing toward the end of the aisle.",
+        "The person takes several small packages from a shelf.",
+        "The person drops the packages into an open shoulder bag.",
+        "The person pulls the bag closed and walks toward the exit.",
+        "The person leaves through the exit doors without going to a register."
+      ],
+      "truth": ["theft"],
+      "note": "Confirmed shoplifting."
+    },
+    {
+      "id": "s1-store-spill-slip",
+      "week": 1,
+      "site": "store",
+      "frames": [
+        "A puddle of liquid spreads across the floor of a store aisle.",
+        "A person walks into the aisle pushing a basket.",
+        "The person's feet slide out on the puddle.",
+        "The person lands hard on their side on the wet floor.",
+        "The person is still on the floor, not getting up."
+      ],
+      "truth": ["fall"],
+      "note": "Wet floor. Staff helped."
+    },
+    {
+      "id": "s2-school-headlock-courtyard",
+      "week": 2,
+      "site": "school",
+      "frames": [
+        "Two students walk together across a school courtyard.",
+        "One student throws an arm around the other's neck and pulls them down into a headlock.",
+        "They twist around together, bent over.",
+        "The second student slips free and gives the first a light push.",
+        "They walk on together, bumping shoulders."
+      ],
+      "truth": [],
+      "note": "Friends messing around."
+    },
+    {
+      "id": "s2-school-rest-bench",
+      "week": 2,
+      "site": "school",
+      "frames": [
+        "Students sit at tables in a school commons area.",
+        "A student walks to a long bench along the wall.",
+        "The student lies down flat on the bench on their back.",
+        "The student stays lying on the bench, one arm over their eyes.",
+        "The student is still lying on the bench."
+      ],
+      "truth": [],
+      "note": "Resting during free period."
+    },
+    {
+      "id": "s2-school-phone-taken",
+      "week": 2,
+      "site": "school",
+      "frames": [
+        "A student sets a phone on a cafeteria table and walks to the lunch line.",
+        "Another student walks past the table and looks back toward the lunch line.",
+        "The second student picks up the phone from the table.",
+        "The second student slides the phone into a pocket and walks quickly toward the doors.",
+        "The first student returns to the table and looks around the empty spot."
+      ],
+      "truth": ["theft"],
+      "note": "Phone returned by the office."
+    },
+    {
+      "id": "s2-school-punches-bus-line",
+      "week": 2,
+      "site": "school",
+      "frames": [
+        "Students wait in a line outside the school for buses.",
+        "Two students step out of the line toward each other.",
+        "One student swings a fist and hits the other in the head.",
+        "Both students trade punches while the line scatters.",
+        "One student is on the ground and the other keeps swinging."
+      ],
+      "truth": ["fight"],
+      "note": "Fight. Staff separated them."
+    },
+    {
+      "id": "s2-store-entrance-hug",
+      "week": 2,
+      "site": "store",
+      "frames": [
+        "People walk in through the sliding doors at a store entrance.",
+        "Two people walk up to each other near the carts.",
+        "The two people grab each other in a tight embrace.",
+        "They hold on, one lifting the other slightly off the floor.",
+        "They let go and walk into the store together."
+      ],
+      "truth": [],
+      "note": "Two friends meeting."
+    },
+    {
+      "id": "s2-store-stockroom-cart",
+      "week": 2,
+      "site": "store",
+      "frames": [
+        "A stockroom with tall metal shelves full of boxes.",
+        "A person walks along the shelves pushing a flat cart.",
+        "The person pulls several boxes off a shelf and stacks them on the cart.",
+        "The person pushes the loaded cart through a door marked Sales Floor.",
+        "The stockroom is empty."
+      ],
+      "truth": [],
+      "note": "Employee restocking."
+    },
+    {
+      "id": "s2-store-checkout-shove",
+      "week": 2,
+      "site": "store",
+      "frames": [
+        "Two people stand in a checkout line, one behind the other.",
+        "The person behind steps around and gestures sharply at the person in front.",
+        "The person in front shoves the other back with both hands.",
+        "The shoved person grabs the first by the arm and yanks them away from the counter.",
+        "A cashier comes around the counter as the two keep pulling at each other."
+      ],
+      "truth": ["fight"],
+      "note": "Altercation. Both asked to leave."
+    },
+    {
+      "id": "s2-store-purse-from-cart",
+      "week": 2,
+      "site": "store",
+      "frames": [
+        "A shopping cart with a purse in the child seat stands in an aisle while a person looks at a shelf with their back turned.",
+        "Another person walks up behind the cart.",
+        "The second person lifts the purse out of the cart.",
+        "The second person tucks the purse under their arm and walks away quickly.",
+        "The first person turns back to the cart and stops."
+      ],
+      "truth": ["theft"],
+      "note": "Purse theft. Police report filed."
+    },
+    {
+      "id": "s3-school-chest-bump",
+      "week": 3,
+      "site": "school",
+      "frames": [
+        "Students in team jerseys walk out of the gym after a game.",
+        "Two students run at each other.",
+        "They jump and slam into each other chest first.",
+        "One stumbles back a step and the other grabs their shoulders.",
+        "They walk off together, one arm over the other's shoulders."
+      ],
+      "truth": [],
+      "note": "Celebrating a win."
+    },
+    {
+      "id": "s3-school-group-hug",
+      "week": 3,
+      "site": "school",
+      "frames": [
+        "A group of students stands in a hallway after the final bell.",
+        "Four students pull together in a tight circle.",
+        "They hold onto each other in a cluster, pressing in.",
+        "The cluster sways and then breaks apart.",
+        "The students walk off in different directions."
+      ],
+      "truth": [],
+      "note": "Group hug on the last day before break."
+    },
+    {
+      "id": "s3-school-faint-lunch-line",
+      "week": 3,
+      "site": "school",
+      "frames": [
+        "Students stand in a lunch line holding trays.",
+        "One student sways and puts a hand on the wall.",
+        "The student's knees buckle and they drop to the floor, tray falling.",
+        "The student lies still on the floor while others step back.",
+        "An adult kneels next to the student on the floor."
+      ],
+      "truth": ["fall"],
+      "note": "Student fainted. Nurse responded."
+    },
+    {
+      "id": "s3-school-camera-turned",
+      "week": 3,
+      "site": "school",
+      "frames": [
+        "A view down a back stairwell of the school.",
+        "A person climbs onto the stair railing below the camera.",
+        "A hand reaches up toward the camera and the view tilts.",
+        "The view now shows only the stairwell ceiling.",
+        "The view still shows only the ceiling."
+      ],
+      "truth": ["other"],
+      "note": "Camera turned to the ceiling."
+    },
+    {
+      "id": "s3-store-child-sits-aisle",
+      "week": 3,
+      "site": "store",
+      "frames": [
+        "An adult and a small child walk down a toy aisle.",
+        "The child stops and drops down to sit on the floor.",
+        "The child is sitting on the floor holding a box from the shelf.",
+        "The adult crouches next to the child.",
+        "The child stands up and they walk on together."
+      ],
+      "truth": [],
+      "note": "Kid sat down to look at a toy."
+    },
+    {
+      "id": "s3-store-bag-after-paying",
+      "week": 3,
+      "site": "store",
+      "frames": [
+        "A person stands at a self-checkout station with a basket of items.",
+        "The person scans each item and taps a card on the reader.",
+        "A receipt prints and the person takes it.",
+        "The person puts the items into a backpack.",
+        "The person walks out the exit."
+      ],
+      "truth": [],
+      "note": "Paid at self-checkout."
+    },
+    {
+      "id": "s3-store-customer-collapses",
+      "week": 3,
+      "site": "store",
+      "frames": [
+        "A person walks slowly down a store aisle, holding onto a cart.",
+        "The person lets go of the cart and grabs at their chest.",
+        "The person collapses onto the floor.",
+        "The person lies on the floor without moving.",
+        "An employee runs over and kneels beside them."
+      ],
+      "truth": ["fall"],
+      "note": "Medical emergency. Ambulance called."
+    },
+    {
+      "id": "s3-store-camera-sprayed",
+      "week": 3,
+      "site": "store",
+      "frames": [
+        "A view of a loading dock behind the store at night.",
+        "A person in a hood walks toward the camera.",
+        "The person raises a spray can toward the camera.",
+        "The view becomes a blur of dark paint.",
+        "The view is fully blocked by paint."
+      ],
+      "truth": ["other"],
+      "note": "Camera spray-painted."
+    },
+    {
+      "id": "s4-school-piggyback",
+      "week": 4,
+      "site": "school",
+      "frames": [
+        "Students walk across a school field at lunch.",
+        "One student runs up behind another and jumps onto their back.",
+        "The second student staggers forward carrying the first.",
+        "Both students tip over and roll onto the grass.",
+        "Both get up and keep walking."
+      ],
+      "truth": [],
+      "note": "Piggyback, nobody hurt."
+    },
+    {
+      "id": "s4-school-goodbye-hug-pickup",
+      "week": 4,
+      "site": "school",
+      "frames": [
+        "Cars line up along the school pickup lane.",
+        "A student walks toward a parked car.",
+        "An adult steps out and pulls the student into a tight embrace.",
+        "They hold on for several seconds.",
+        "The student gets into the car."
+      ],
+      "truth": [],
+      "note": "Parent pickup."
+    },
+    {
+      "id": "s4-school-locker-slam",
+      "week": 4,
+      "site": "school",
+      "frames": [
+        "A student stands at an open locker.",
+        "Another student walks up quickly from behind.",
+        "The second student grabs the first by the backpack and slams them into the lockers.",
+        "The first student is pressed against the lockers while the second holds them there.",
+        "The first student pulls free and backs away."
+      ],
+      "truth": ["fight"],
+      "note": "Assault. Reported to the dean."
+    },
+    {
+      "id": "s4-school-laptop-library",
+      "week": 4,
+      "site": "school",
+      "frames": [
+        "A laptop sits open on a library table next to a jacket, with no one at the table.",
+        "A person walks between the shelves toward the table.",
+        "The person closes the laptop and picks it up.",
+        "The person slides the laptop under their jacket and walks to the exit.",
+        "A student comes back to the table and searches around the chair."
+      ],
+      "truth": ["theft"],
+      "note": "Laptop stolen."
+    },
+    {
+      "id": "s4-store-siblings-roughhouse",
+      "week": 4,
+      "site": "store",
+      "frames": [
+        "Two children walk ahead of an adult down a cereal aisle.",
+        "One child grabs the other around the waist and tries to pull them down.",
+        "They wrestle, pushing and tugging at each other's arms.",
+        "The adult reaches in and separates them.",
+        "Both children walk on next to the adult."
+      ],
+      "truth": [],
+      "note": "Siblings playing."
+    },
+    {
+      "id": "s4-store-own-bag-register",
+      "week": 4,
+      "site": "store",
+      "frames": [
+        "A bag sits on the floor next to a register while a person pays.",
+        "The person finishes paying and walks toward the exit.",
+        "The person stops, turns around, and walks back to the register.",
+        "The person picks up the bag from the floor next to the register.",
+        "The person leaves through the exit with the bag."
+      ],
+      "truth": [],
+      "note": "Came back for their own bag."
+    },
+    {
+      "id": "s4-store-grab-and-run",
+      "week": 4,
+      "site": "store",
+      "frames": [
+        "Boxed headphones hang on hooks in an electronics aisle.",
+        "A person walks up and pulls several boxes off the hooks at once.",
+        "The person tucks the boxes against their chest.",
+        "The person runs toward the exit.",
+        "The person runs through the exit doors and out of view."
+      ],
+      "truth": ["theft"],
+      "note": "Grab and run."
+    },
+    {
+      "id": "s4-store-parking-lot-fight",
+      "week": 4,
+      "site": "store",
+      "frames": [
+        "A view of a store parking lot.",
+        "Two people get out of cars parked next to each other.",
+        "One person pushes the other against a car.",
+        "The two people throw punches at each other between the cars.",
+        "One person falls to the pavement while the other walks away."
+      ],
+      "truth": ["fight"],
+      "note": "Fight in the lot. Police called."
+    }
+  ],
+  "test": [
+    {
+      "id": "t-hug-hallway",
+      "frames": [
+        "Students walk along a hallway between classes.",
+        "Two students stop and face each other.",
+        "The two students throw their arms around each other.",
+        "They hold each other tightly for a few seconds.",
+        "They separate and walk off in opposite directions."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-hug-cafeteria-group",
+      "frames": [
+        "Students sit at tables in a cafeteria.",
+        "Three students stand up from a table at once.",
+        "The three students grab each other in a tight huddle.",
+        "The huddle rocks side to side.",
+        "They let go and sit back down."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-horseplay-gym",
+      "frames": [
+        "Students stand around in a gym before class starts.",
+        "One student grabs another from behind around the chest.",
+        "The two students twist and tug at each other.",
+        "Both drop down onto a gym mat, tangled together.",
+        "Both get up and walk to the bleachers together."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-crouch-tie-shoe",
+      "frames": [
+        "A student walks across a school lobby.",
+        "The student stops and drops down onto one knee.",
+        "The student is low to the floor, both hands down at one foot.",
+        "The student stays crouched for a few seconds.",
+        "The student stands up and walks on."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-sit-floor-waiting",
+      "frames": [
+        "A student walks to a closed classroom door.",
+        "The student drops down to the floor next to the door.",
+        "The student sits on the floor with knees pulled up.",
+        "The student stays sitting on the floor next to the door.",
+        "The door opens and the student stands up and goes inside."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-own-backpack-bench",
+      "frames": [
+        "A student sets a backpack on a bench in a hallway and walks to a water fountain.",
+        "The student drinks from the fountain.",
+        "The student walks back and picks up the backpack from the bench.",
+        "The student swings the backpack over one shoulder.",
+        "The student walks quickly toward the exit doors."
+      ],
+      "truth": []
+    },
+    {
+      "id": "t-collects-items-table",
+      "frames": [
+        "Several bags and jackets sit on a table in a school commons area.",
+        "A person walks up to the table carrying a large tote.",
+        "The person picks up a jacket and a bag from the table.",
+        "The person stuffs both into the tote.",
+        "The person walks out through a side door."
+      ],
+      "truth": [],
+      "why": "Ambiguous on purpose: an adult collecting their child's things. Not like any stream clip."
+    },
+    {
+      "id": "t-unseen-wipe-camera",
+      "frames": [
+        "A view of a school entrance hallway.",
+        "A person on a step ladder appears close to the camera.",
+        "A cloth moves across the view and the image smears.",
+        "The view is partly blocked for a few seconds.",
+        "The view clears, sharper than before."
+      ],
+      "truth": [],
+      "why": "A custodian cleaning the lens. No stream clip teaches this pattern, so learning should not fix it."
+    },
+    {
+      "id": "t-fight-bathroom-door",
+      "frames": [
+        "Two students stand face to face outside a bathroom door.",
+        "One student punches the other in the face.",
+        "The hit student falls back against the wall, then swings back.",
+        "Both students grab each other and keep punching.",
+        "Other students crowd around, holding up phones."
+      ],
+      "truth": ["fight"]
+    },
+    {
+      "id": "t-fight-pinned-fence",
+      "frames": [
+        "Two students stand near a fence at the edge of the school field.",
+        "One student grabs the other by the jacket with both hands.",
+        "The first student pushes the second hard against the fence and holds them there.",
+        "The pinned student tries to pull away but is shoved back into the fence.",
+        "The first student lets go and walks off; the pinned student slides to the ground."
+      ],
+      "truth": ["fight"]
+    },
+    {
+      "id": "t-fall-wet-entrance",
+      "frames": [
+        "Rain blows in through the open doors of the school entrance.",
+        "A student walks in quickly across the wet tile.",
+        "The student's feet slip and they fall backward.",
+        "The student lands flat on their back on the tile.",
+        "The student lies on the floor, holding the back of their head."
+      ],
+      "truth": ["fall"]
+    },
+    {
+      "id": "t-fall-collapse-gym",
+      "frames": [
+        "Students jog laps around a gym.",
+        "One student slows down and stumbles.",
+        "The student collapses face down on the gym floor.",
+        "The student does not move while the others keep running.",
+        "A teacher runs over and kneels beside the student."
+      ],
+      "truth": ["fall"]
+    },
+    {
+      "id": "t-theft-backpack-bleachers",
+      "frames": [
+        "A backpack sits on the bleachers while its owner plays on the court below.",
+        "A person walks along the bleachers, looking down at the court.",
+        "The person picks up the backpack.",
+        "The person unzips it, takes out a wallet, and puts the wallet in their pocket.",
+        "The person puts the backpack down and walks out of the gym."
+      ],
+      "truth": ["theft"]
+    },
+    {
+      "id": "t-theft-phone-charging",
+      "frames": [
+        "Phones charge on a shelf at the back of a classroom while students work at desks.",
+        "A student gets up and walks to the back of the room.",
+        "The student looks toward the teacher, then unplugs a phone from the far end of the shelf.",
+        "The student slides the phone into a sleeve.",
+        "The student sits back down at their desk; later another student walks to the shelf and searches the empty charger."
+      ],
+      "truth": ["theft"]
+    },
+    {
+      "id": "t-theft-bike-cut-lock",
+      "frames": [
+        "Bikes are locked to a rack beside the school.",
+        "A person kneels by one bike and pulls a cutting tool from a bag.",
+        "The person cuts through the bike's lock.",
+        "The person pulls the bike out of the rack.",
+        "The person rides away fast."
+      ],
+      "truth": ["theft"]
+    },
+    {
+      "id": "t-other-camera-covered",
+      "frames": [
+        "A view of a school side door at night.",
+        "A person walks right up below the camera.",
+        "A hand holding a plastic bag reaches toward the camera.",
+        "The bag covers the camera and the view goes dark and blurry.",
+        "The view stays blocked."
+      ],
+      "truth": ["other"]
+    }
+  ]
+}
