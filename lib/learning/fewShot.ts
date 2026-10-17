@@ -12,7 +12,6 @@ function toExample(label: LabeledEvent): ReviewedExample {
     label: label.label,
     description: label.description,
     note: label.note,
-    siteName: label.siteName,
   };
 }
 

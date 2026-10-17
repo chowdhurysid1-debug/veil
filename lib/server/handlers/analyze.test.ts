@@ -209,7 +209,7 @@ describe("learning applied to analysis", () => {
     ).toHaveLength(2);
   });
 
-  it("gives the model reviewed examples from every site", async () => {
+  it("gives the model reviewed examples from every site without naming any site", async () => {
     const analyze = fakeAnalyzer([]);
     const { deps, store } = makeDeps({ analyze });
     seedMemoryStore(store, TEST_NOW);
@@ -218,8 +218,17 @@ describe("learning applied to analysis", () => {
     await analyzeClip(clipId, deps);
 
     const { examples } = analyze.mock.calls[0][0];
-    expect(examples.length).toBeGreaterThan(0);
-    expect(new Set(examples.map((example) => example.siteName)).size).toBe(2);
+    const sent = new Set(examples.map((example) => example.description));
+    const labels = await store.listLabels();
+    const sitesUsed = new Set(
+      labels
+        .filter((label) => sent.has(label.description))
+        .map((label) => label.siteName),
+    );
+    expect(sitesUsed.size).toBe(2);
+    expect(JSON.stringify(examples)).not.toMatch(
+      /Demo High School|Northside Market/,
+    );
   });
 
   it("runs one model call when the same clip is analyzed twice at once", async () => {

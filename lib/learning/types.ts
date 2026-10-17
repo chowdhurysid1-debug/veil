@@ -12,8 +12,9 @@ export interface LabeledEvent {
   createdAt: string;
 }
 
-// What the model sees of a past label: no ids, no timestamps.
+// What the model sees of a past label: no ids, timestamps, or site names, so one
+// customer's prompt never names another customer.
 export type ReviewedExample = Pick<
   LabeledEvent,
-  "eventType" | "label" | "description" | "note" | "siteName"
+  "eventType" | "label" | "description" | "note"
 >;

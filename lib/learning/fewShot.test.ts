@@ -45,23 +45,29 @@ describe("selectExamples", () => {
   });
 
   it("draws on every site and every labeled type", () => {
-    const examples = selectExamples(seed);
-    expect(new Set(examples.map((example) => example.siteName))).toEqual(
+    const descriptions = new Set(
+      selectExamples(seed).map((example) => example.description),
+    );
+    const sitesUsed = new Set(
+      seed
+        .filter((label) => descriptions.has(label.description))
+        .map((label) => label.siteName),
+    );
+    expect(sitesUsed).toEqual(
       new Set(["Demo High School", "Northside Market"]),
     );
-    expect(new Set(examples.map((example) => example.eventType))).toEqual(
-      new Set(["fall", "fight", "theft", "fire"]),
-    );
+    expect(
+      new Set(selectExamples(seed).map((example) => example.eventType)),
+    ).toEqual(new Set(["fall", "fight", "theft", "fire"]));
   });
 
-  it("never passes ids or timestamps to the model", () => {
+  it("never passes ids, timestamps, or site names to the model", () => {
     for (const example of selectExamples(seed)) {
       expect(Object.keys(example).sort()).toEqual([
         "description",
         "eventType",
         "label",
         "note",
-        "siteName",
       ]);
     }
   });
