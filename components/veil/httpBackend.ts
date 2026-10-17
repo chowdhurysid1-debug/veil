@@ -112,9 +112,10 @@ export const httpBackend: VeilApi = {
       body,
     }),
 
-  createVideoUpload: (clipId) =>
+  createVideoUpload: (clipId, body) =>
     request(`/api/clips/${segment(clipId)}/video`, videoUploadResponseSchema, {
       method: "POST",
+      body,
     }),
 
   uploadVideo: async (uploadUrl, video) => {

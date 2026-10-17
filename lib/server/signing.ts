@@ -32,6 +32,26 @@ export function signStamp(secret: string, stamp: ClipStamp): string {
   return createHmac("sha256", secret).update(stampMessage(stamp)).digest("hex");
 }
 
+const VIDEO_UPLOAD_VERSION = "veil-video-upload-v1";
+
+// Only the browser that uploaded a clip gets this token, so only it can attach the
+// clip's blurred video. Storage refuses a second video, so each token works once.
+export function signVideoUpload(secret: string, clipId: string): string {
+  return createHmac("sha256", secret)
+    .update(`${VIDEO_UPLOAD_VERSION}|${clipId}`)
+    .digest("hex");
+}
+
+export function isVideoUploadTokenValid(
+  secret: string,
+  clipId: string,
+  token: string,
+): boolean {
+  const expected = Buffer.from(signVideoUpload(secret, clipId), "hex");
+  const actual = Buffer.from(token, "hex");
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
 export function isStampValid(
   secret: string,
   stamp: ClipStamp,

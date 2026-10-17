@@ -228,16 +228,24 @@ describe("GET /api/clips", () => {
 });
 
 describe("blurred video", () => {
-  it("has no video until the browser uploads one, then signs a URL for it", async () => {
+  function videoRequest(token: string) {
+    return jsonRequest({ token });
+  }
+
+  it("has no video until the uploading browser adds one, then signs a URL for it", async () => {
     const { deps, blobs } = makeDeps();
-    const { clipId } = await uploadClip(deps);
+    const { clipId, videoUploadToken } = await uploadClip(deps);
 
     const before = clipDetailSchema.parse(
       await readBody(await getClipDetail(clipId, deps)),
     );
     expect(before.videoUrl).toBeNull();
 
-    const upload = await createVideoUpload(clipId, deps);
+    const upload = await createVideoUpload(
+      videoRequest(videoUploadToken),
+      clipId,
+      deps,
+    );
     expect(upload.status).toBe(201);
     const { uploadUrl } = videoUploadResponseSchema.parse(
       await readBody(upload),
@@ -256,9 +264,24 @@ describe("blurred video", () => {
     expect(after.videoUrl).toContain(`videos/${clipId}.mp4`);
   });
 
+  it("refuses anyone without the token from the clip upload", async () => {
+    const { deps } = makeDeps();
+    const { clipId } = await uploadClip(deps);
+    const other = await uploadClip(deps);
+
+    for (const token of ["", "f".repeat(64), other.videoUploadToken]) {
+      const response = await createVideoUpload(
+        videoRequest(token),
+        clipId,
+        deps,
+      );
+      expect(response.status).toBe(403);
+    }
+  });
+
   it("refuses a second video for the same clip", async () => {
     const { deps, blobs } = makeDeps();
-    const { clipId } = await uploadClip(deps);
+    const { clipId, videoUploadToken } = await uploadClip(deps);
     await blobs.upload(
       "videos",
       `${clipId}.mp4`,
@@ -266,7 +289,11 @@ describe("blurred video", () => {
       "video/mp4",
     );
 
-    const response = await createVideoUpload(clipId, deps);
+    const response = await createVideoUpload(
+      videoRequest(videoUploadToken),
+      clipId,
+      deps,
+    );
     expect(response.status).toBe(409);
     expect(await errorOf(response)).toBe(
       "This clip already has its blurred video.",
@@ -275,17 +302,25 @@ describe("blurred video", () => {
 
   it("refuses a video for a clip stamped long ago", async () => {
     const { deps } = makeDeps();
-    const { clipId } = await uploadClip(deps);
+    const { clipId, videoUploadToken } = await uploadClip(deps);
     deps.now = () =>
       new Date(TEST_NOW.getTime() + VIDEO_UPLOAD_WINDOW_MS + 1000);
 
-    const response = await createVideoUpload(clipId, deps);
+    const response = await createVideoUpload(
+      videoRequest(videoUploadToken),
+      clipId,
+      deps,
+    );
     expect(response.status).toBe(409);
   });
 
   it("answers 404 for a clip that does not exist", async () => {
     const { deps } = makeDeps();
-    const response = await createVideoUpload("not-a-uuid", deps);
+    const response = await createVideoUpload(
+      videoRequest("f".repeat(64)),
+      "not-a-uuid",
+      deps,
+    );
     expect(response.status).toBe(404);
   });
 });

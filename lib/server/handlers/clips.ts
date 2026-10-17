@@ -1,5 +1,6 @@
 import {
   createClipRequestSchema,
+  videoUploadRequestSchema,
   type ClipDetail,
   type CreateClipRequest,
   type CreateClipResponse,
@@ -14,11 +15,16 @@ import {
   firstIssue,
   json,
   MAX_CLIP_REQUEST_BYTES,
+  MAX_JSON_BYTES,
   parseUuid,
   readJson,
   describeError,
 } from "../http";
-import { signStamp } from "../signing";
+import {
+  isVideoUploadTokenValid,
+  signStamp,
+  signVideoUpload,
+} from "../signing";
 import {
   CIPHERTEXT_CONTENT_TYPE,
   FRAME_URL_TTL_SECONDS,
@@ -240,6 +246,7 @@ export async function createClip(
   const body: CreateClipResponse = {
     clipId,
     signature,
+    videoUploadToken: signVideoUpload(deps.signingSecret, clipId),
     stampedAt,
     facesLocked: faces.length,
     framesStored: frames.length,
@@ -306,8 +313,10 @@ export async function getClipDetail(
 }
 
 // A one-time upload URL for the clip's blurred video. The browser renders it
-// from the original file, so the original never reaches the server.
+// from the original file, so the original never reaches the server. Only the
+// browser holding the token from the clip upload can ask for one.
 export async function createVideoUpload(
+  request: Request,
   id: string,
   deps: VeilDeps,
 ): Promise<Response> {
@@ -315,6 +324,19 @@ export async function createVideoUpload(
   const clip = clipId ? await deps.store.getClip(clipId) : null;
   if (!clipId || !clip) {
     return errorResponse(404, "We could not find that clip.");
+  }
+
+  const read = await readJson(request, MAX_JSON_BYTES);
+  if (!read.ok) return read.response;
+  const parsed = videoUploadRequestSchema.safeParse(read.body);
+  if (
+    !parsed.success ||
+    !isVideoUploadTokenValid(deps.signingSecret, clipId, parsed.data.token)
+  ) {
+    return errorResponse(
+      403,
+      "Only the browser that uploaded this clip can add its video.",
+    );
   }
 
   const age = deps.now().getTime() - new Date(clip.stampedAt).getTime();

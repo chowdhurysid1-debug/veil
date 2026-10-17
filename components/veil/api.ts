@@ -14,6 +14,7 @@ import type {
   UnlockResponse,
   VerifyRequest,
   VerifyResponse,
+  VideoUploadRequest,
   VideoUploadResponse,
 } from "../../lib/contracts";
 import { httpBackend } from "./httpBackend";
@@ -39,7 +40,10 @@ export interface VeilApi {
     clipId: string,
     request: VerifyRequest,
   ) => Promise<VerifyResponse>;
-  createVideoUpload: (clipId: string) => Promise<VideoUploadResponse>;
+  createVideoUpload: (
+    clipId: string,
+    request: VideoUploadRequest,
+  ) => Promise<VideoUploadResponse>;
   // Sends the blurred MP4 straight to storage, not through a Veil route.
   uploadVideo: (uploadUrl: string, video: Blob) => Promise<void>;
 }
