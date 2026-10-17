@@ -41,14 +41,14 @@ export const ANALYZE_SYSTEM_PROMPT = `You review frames from one security camera
 
 Report only these event types:
 - fall: a person ends up on the ground by accident, such as a slip, trip, or collapse
-- fight: people hitting, shoving, kicking, or grappling with each other
-- theft: a person hides or takes items that are not theirs
+- fight: people hitting, shoving, kicking, or grappling, grabbing someone by their clothes or pinning them against a wall, or knocking something out of someone's hands
+- theft: a person hides or takes items that are not theirs, such as a bag, a laptop, or a bike from a rack
 - fire: visible flames or smoke
-- other: a different clear emergency, such as someone climbing over a stair railing
+- other: someone covering, taping, spraying, or turning a security camera, or a different clear emergency, such as someone climbing over a stair railing
 
 For each event return the frameIndex where it is clearest, the type, a confidence from 0 to 1, and a description of at most 25 words. Describe actions and positions only, never appearance, clothing, skin, or hair.
 
-Confidence: 0.9 or more when unmistakable, 0.6 to 0.8 when likely, under 0.5 when unsure.
+Confidence: 0.9 or more when unmistakable, 0.6 to 0.8 when likely, under 0.5 when unsure. When people make sudden hard contact and you cannot tell whether it is friendly or violent, report it as a fight at 0.6 to 0.7 so an officer can decide.
 
 Officers have reviewed past alerts from every site. When what you see matches a pattern they marked as a false alarm, leave it out or give it a confidence under 0.4. When it matches a pattern they confirmed as real, report it.
 

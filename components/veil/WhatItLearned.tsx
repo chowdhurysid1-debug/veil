@@ -13,6 +13,7 @@ import {
   FEEDBACK_LABELS,
   formatConfidence,
   formatStampTime,
+  isThresholdShown,
 } from "./format";
 import {
   useLastLearningUpdate,
@@ -21,7 +22,7 @@ import {
 } from "./learningSession";
 import { MOTION } from "./motion";
 
-const TYPE_ORDER: EventType[] = ["fall", "fight", "theft", "fire", "other"];
+const TYPE_ORDER: EventType[] = ["fight", "fall", "theft", "other", "fire"];
 
 interface WhatItLearnedProps {
   stats: LearningStats | null;
@@ -56,9 +57,7 @@ export function WhatItLearned({
       )}
     >
       <header className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-3">
-        <h2 className="label-mono text-ink">
-          What it learned
-        </h2>
+        <h2 className="label-mono text-ink">What it learned</h2>
         <span
           className={cn(
             "label-mono flex items-center gap-2",
@@ -98,7 +97,7 @@ export function WhatItLearned({
             <ul className="flex flex-col gap-3.5">
               {TYPE_ORDER.map((type) => {
                 const row = stats.byType.find((item) => item.type === type);
-                if (!row) return null;
+                if (!row || !isThresholdShown(row)) return null;
                 const change =
                   lastUpdate?.eventType === type ? lastUpdate : null;
                 return (

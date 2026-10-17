@@ -22,78 +22,84 @@
   },
   {
     "id": "empty-text",
-    "input": { "text": "   " },
+    "input": {
+      "text": "   "
+    },
     "expect": "rejected"
   },
   {
     "id": "missing-field",
-    "input": { "body": "wrong key" },
+    "input": {
+      "body": "wrong key"
+    },
     "expect": "rejected"
   },
   {
     "kind": "analyze",
-    "id": "demo-1-shoe-tie-first-time",
-    "why": "Demo step 2: before anyone has labeled a shoe-tie, this should raise a possible fall. It is really a false alarm, so it counts against fall precision.",
+    "id": "demo-1-high-five-first-time",
+    "why": "Demo step 2: before anyone has labeled a high-five, sudden hand contact between two students should raise a possible fight. It is really a false alarm, so it counts against fight precision.",
     "frames": [
-      "A person walks quickly down the hallway next to the lockers.",
-      "The person stops abruptly beside the lockers.",
-      "The person drops suddenly to the floor and lands sitting down, legs bent.",
-      "The person is on the floor beside the lockers, hunched forward, head down near their feet.",
-      "The person is still on the floor, hunched over, barely moving.",
-      "The person is still on the floor beside the lockers.",
-      "The person gets up from the floor.",
-      "The person walks away down the hallway."
+      "Students walk in both directions down a long school hallway lined with doors.",
+      "Two students head toward each other from opposite ends of the hallway.",
+      "As they meet, both students swing one arm up high toward the other.",
+      "Their raised hands strike each other hard above their heads.",
+      "Their arms swing apart after the contact and one student spins halfway around.",
+      "Both students keep walking in opposite directions.",
+      "A few students stand by the wall. The hallway is calm."
     ],
     "truth": [],
-    "expectFlagged": ["fall"]
+    "expectFlagged": [
+      "fight"
+    ]
   },
   {
     "kind": "analyze",
-    "id": "demo-2-shoe-tie-after-label",
-    "why": "Demo step 4: a similar clip after the officer marked the first one a false alarm. Should not be flagged.",
+    "id": "demo-2-high-five-after-label",
+    "why": "Demo step 3: a similar clip after the officer marked the first one a false alarm. Should not be flagged.",
     "addLabels": [
       {
-        "type": "fall",
+        "type": "fight",
         "label": "false_alarm",
-        "description": "A person drops suddenly to the floor beside the lockers and sits hunched over for several seconds, then gets up and walks away.",
-        "note": "Sat down to tie a shoe."
+        "description": "Two students meet in the hallway, swing their arms up, and their hands strike each other above their heads, then they keep walking.",
+        "note": null
       }
     ],
     "frames": [
-      "A person walks along the hallway near the water fountain.",
-      "The person slows down next to the wall.",
-      "The person drops quickly to the floor and sits with knees bent.",
-      "The person is on the floor, hunched forward with hands near one foot.",
-      "The person is still on the floor, hunched forward.",
-      "The person stands back up.",
-      "The person continues walking down the hallway."
+      "A group of students walks toward the camera down a sunlit hallway.",
+      "One student turns toward another who is walking past.",
+      "The two students raise their arms and their hands strike each other at head height.",
+      "The two students lower their arms and keep walking side by side.",
+      "The students walk out of view at the end of the hallway."
     ],
     "truth": [],
     "expectFlagged": []
   },
   {
     "kind": "analyze",
-    "id": "demo-3-real-fall-after-label",
-    "why": "Demo step 4: a real fall after the shoe-tie label. Learning must not hide it.",
+    "id": "demo-3-collar-grab-after-label",
+    "why": "Demo step 4: a real fight after the high-five label. Learning must not hide it.",
     "addLabels": [
       {
-        "type": "fall",
+        "type": "fight",
         "label": "false_alarm",
-        "description": "A person drops suddenly to the floor beside the lockers and sits hunched over for several seconds, then gets up and walks away.",
-        "note": "Sat down to tie a shoe."
+        "description": "Two students meet in the hallway, swing their arms up, and their hands strike each other above their heads, then they keep walking.",
+        "note": null
       }
     ],
     "frames": [
-      "A person walks down the hallway carrying a stack of books.",
-      "The person's foot catches on a backpack strap on the floor.",
-      "The person pitches forward, arms out, books flying.",
-      "The person hits the floor face down.",
-      "The person lies face down on the floor, not moving.",
-      "Two other people rush over and kneel beside the person on the floor.",
-      "The person is still lying on the floor while the others crouch beside them."
+      "A student stands with their back against a dark metal door outside the school.",
+      "Another student steps in close and grabs the first student's jacket with both fists.",
+      "The second student pushes the first back against the door, holding them by the collar.",
+      "The pinned student leans away and turns their head while the other keeps a tight grip.",
+      "The second student jerks the pinned student's jacket and leans in closer.",
+      "The pinned student is still held against the door by the collar."
     ],
-    "truth": ["fall"],
-    "expectFlagged": ["fall"]
+    "truth": [
+      "fight"
+    ],
+    "expectFlagged": [
+      "fight"
+    ]
   },
   {
     "kind": "analyze",
@@ -105,8 +111,12 @@
       "The person lies on their back on the floor, one arm over their head.",
       "The person is still on the floor, trying to sit up slowly."
     ],
-    "truth": ["fall"],
-    "expectFlagged": ["fall"]
+    "truth": [
+      "fall"
+    ],
+    "expectFlagged": [
+      "fall"
+    ]
   },
   {
     "kind": "analyze",
@@ -132,8 +142,12 @@
       "Both people grab each other and trade punches.",
       "A small crowd gathers around the two people who are still hitting each other."
     ],
-    "truth": ["fight"],
-    "expectFlagged": ["fight"]
+    "truth": [
+      "fight"
+    ],
+    "expectFlagged": [
+      "fight"
+    ]
   },
   {
     "kind": "analyze",
@@ -159,21 +173,12 @@
       "The person zips the jacket and walks toward the front of the store.",
       "The person walks past the checkout registers without stopping and out the exit."
     ],
-    "truth": ["theft"],
-    "expectFlagged": ["theft"]
-  },
-  {
-    "kind": "analyze",
-    "id": "fire-trash-can",
-    "frames": [
-      "A quiet hallway with a trash can beside a bench.",
-      "A thin line of gray smoke rises from the trash can.",
-      "The smoke is thicker and darker, spreading along the ceiling.",
-      "Orange flames are visible at the top of the trash can.",
-      "Two people back away from the trash can while flames and smoke grow."
+    "truth": [
+      "theft"
     ],
-    "truth": ["fire"],
-    "expectFlagged": ["fire"]
+    "expectFlagged": [
+      "theft"
+    ]
   },
   {
     "kind": "analyze",
@@ -184,8 +189,12 @@
       "The person is sitting on top of the railing with both legs on the outside, above a long drop.",
       "The person is still on the outside of the railing, holding on with one hand."
     ],
-    "truth": ["other"],
-    "expectFlagged": ["other"]
+    "truth": [
+      "other"
+    ],
+    "expectFlagged": [
+      "other"
+    ]
   },
   {
     "kind": "analyze",
@@ -199,5 +208,58 @@
     ],
     "truth": [],
     "expectFlagged": []
+  },
+  {
+    "kind": "analyze",
+    "id": "fight-book-knocked-away",
+    "why": "More incidents: a passer-by deliberately knocks a book out of a student's hands.",
+    "frames": [
+      "A person walks down a corridor reading an open book held in both hands.",
+      "Another person walks toward them from the far end of the corridor.",
+      "As they pass, the second person swings an arm and strikes the book.",
+      "The book flies out of the first person's hands and falls to the floor.",
+      "The first person bends down to pick up the book while the second person walks away without looking back."
+    ],
+    "truth": [
+      "fight"
+    ],
+    "expectFlagged": [
+      "fight"
+    ]
+  },
+  {
+    "kind": "analyze",
+    "id": "other-camera-taped-over",
+    "why": "More incidents: camera tampering is reported as other.",
+    "frames": [
+      "A security camera is mounted on a wooden pole beside a brick wall in an alley.",
+      "A person with a face mask walks toward the pole, looking around.",
+      "The person crouches next to the pole and glances back over their shoulder.",
+      "The person reaches up and wraps tape around the camera lens.",
+      "The person hurries away from the pole."
+    ],
+    "truth": [
+      "other"
+    ],
+    "expectFlagged": [
+      "other"
+    ]
+  },
+  {
+    "kind": "analyze",
+    "id": "theft-bike-lock-cut",
+    "frames": [
+      "Several bikes are locked to a rack outside the school entrance.",
+      "A person walks up to the rack and looks around.",
+      "The person kneels by one bike and cuts its lock with a tool from their bag.",
+      "The person pulls the bike out of the rack and drops the cut lock on the ground.",
+      "The person rides away quickly on the bike."
+    ],
+    "truth": [
+      "theft"
+    ],
+    "expectFlagged": [
+      "theft"
+    ]
   }
 ]

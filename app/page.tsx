@@ -6,7 +6,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { FadeIn } from "@/components/veil/FadeIn";
 import { LandingNav } from "@/components/veil/LandingNav";
 import { VeilLogo } from "@/components/veil/VeilLogo";
-import { MOCK_SCENARIOS, mockFrameSvg, svgToDataUrl } from "@/lib/mock";
 
 // Every figure on this page comes from SPEC.md and links to its source.
 const SOURCES = {
@@ -27,11 +26,11 @@ const SOURCES = {
 const STEPS = [
   {
     title: "Blurred in the browser",
-    body: "Faces are found and blurred on your device. Each face is encrypted with its own key before anything uploads.",
+    body: "Every head is found and blurred on your device, in every frame of the video. Each face is encrypted with its own key before anything uploads.",
   },
   {
     title: "AI sees blurred frames only",
-    body: "Falls, fights, thefts and fires are flagged from blurred frames, with a time and a confidence.",
+    body: "Fights, falls, thefts and covered cameras are flagged from blurred frames, with a time and a confidence.",
   },
   {
     title: "Every label teaches every site",
@@ -47,14 +46,10 @@ const STEPS = [
   },
 ] as const;
 
-// A synthetic, already-blurred hallway frame from the demo scenarios. Not real footage.
-// Its own camera caption and record dot are stripped: scaled to full-bleed they
-// would collide with the page's logo and readouts.
-const HERO_FRAME = svgToDataUrl(
-  mockFrameSvg(7, MOCK_SCENARIOS[0])
-    .replace(/<g font-family[\s\S]*?<\/g>/, "")
-    .replace(/<circle cx="612"[^>]*\/>/, ""),
-);
+// The demo's hallway clip after Veil's own pipeline: every head blurred in the
+// browser. Stock footage with actors, see public/demo/CREDITS.md.
+const HERO_VIDEO = "/demo/hero-hallway-blurred.mp4";
+const HERO_POSTER = "/demo/hero-hallway-blurred.jpg";
 
 export default function LandingPage() {
   return (
@@ -66,7 +61,18 @@ export default function LandingPage() {
         <div
           aria-hidden
           className="absolute inset-0 -z-10 bg-cover bg-center opacity-35 grayscale"
-          style={{ backgroundImage: `url("${HERO_FRAME}")` }}
+          style={{ backgroundImage: `url("${HERO_POSTER}")` }}
+        />
+        <video
+          aria-hidden
+          src={HERO_VIDEO}
+          poster={HERO_POSTER}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 -z-10 size-full object-cover opacity-35 grayscale motion-reduce:hidden"
         />
         <div
           aria-hidden
@@ -190,8 +196,9 @@ export default function LandingPage() {
                 Every label teaches every site.
               </h2>
               <p className="max-w-md text-base leading-relaxed text-ink-muted">
-                One officer marks a shoe-tie as a false alarm. Every school on
-                Veil stops paging for it. Real falls still get through.
+                One officer marks a hallway high-five as a false alarm. Every
+                school on Veil stops paging for it. A student pinned to a wall
+                still gets through.
               </p>
             </FadeIn>
             <FadeIn delay={0.2} className="border border-signal/40 bg-panel">
@@ -201,16 +208,16 @@ export default function LandingPage() {
               <div className="flex flex-col gap-5 px-5 py-6">
                 <ExampleLine
                   label="Officer decision"
-                  value="Fall marked false alarm"
+                  value="High-five marked false alarm"
                 />
                 <ExampleLine
-                  label="Fall threshold"
-                  value="0.58 to 0.60"
+                  label="Fight threshold"
+                  value="0.50 to 0.54"
                   isSignal
                 />
                 <ExampleLine label="Applies to" value="Every site" />
-                <ExampleLine label="Next shoe-tie" value="Not flagged" />
-                <ExampleLine label="Next real fall" value="Flagged" />
+                <ExampleLine label="Next high-five" value="Not flagged" />
+                <ExampleLine label="Next real fight" value="Flagged" />
               </div>
             </FadeIn>
           </div>

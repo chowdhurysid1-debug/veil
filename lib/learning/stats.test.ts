@@ -24,9 +24,9 @@ describe("buildLearningStats", () => {
     expect(buildLearningStats(seed).byType).toEqual([
       { type: "fall", labels: 9, falseAlarmRate: 0.44, threshold: 0.58 },
       { type: "fight", labels: 5, falseAlarmRate: 0.2, threshold: 0.5 },
-      { type: "theft", labels: 4, falseAlarmRate: 0.25, threshold: 0.51 },
-      { type: "fire", labels: 2, falseAlarmRate: 0, threshold: 0.47 },
-      { type: "other", labels: 0, falseAlarmRate: 0, threshold: 0.5 },
+      { type: "theft", labels: 5, falseAlarmRate: 0.2, threshold: 0.5 },
+      { type: "fire", labels: 0, falseAlarmRate: 0, threshold: 0.5 },
+      { type: "other", labels: 1, falseAlarmRate: 0, threshold: 0.48 },
     ]);
   });
 
