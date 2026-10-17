@@ -7,12 +7,20 @@ describe("computeSampleTimes", () => {
     expect(computeSampleTimes(-5)).toEqual([]);
   });
 
-  it("returns [0] for a sub-second clip", () => {
-    expect(computeSampleTimes(0.5)).toEqual([0]);
+  it("returns [0] for a clip under half a second", () => {
+    expect(computeSampleTimes(0.4)).toEqual([0]);
   });
 
-  it("returns one frame per second for a short clip", () => {
-    expect(computeSampleTimes(5)).toEqual([0, 1, 2, 3, 4]);
+  it("samples a short clip twice a second, so a one-second shove is seen", () => {
+    expect(computeSampleTimes(5)).toEqual([
+      0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5,
+    ]);
+  });
+
+  it("spreads 20 frames over a 10-second clip", () => {
+    const times = computeSampleTimes(10);
+    expect(times).toHaveLength(20);
+    expect(times[19]).toBe(9.5);
   });
 
   it("returns exactly 20 frames for a 20-second clip", () => {

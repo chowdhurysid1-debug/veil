@@ -3,7 +3,9 @@ import type { ExtractedFrame } from "./extractFrames";
 import type { FaceDetection } from "./detectFaces";
 
 const PADDING_RATIO = 0.2;
-const BLUR_ITERATIONS = 3;
+// Each head is shrunk to this many pixels across, then stretched back with
+// smoothing. Nothing that small keeps a recognizable face, at any face size.
+const SMEAR_PX = 5;
 
 export interface BlurredFrame {
   frameIndex: number;
@@ -11,83 +13,58 @@ export interface BlurredFrame {
   blob: Blob;
 }
 
+let smearCanvas: HTMLCanvasElement | null = null;
+
 /**
- * Apply a box-pass blur to a region of canvas pixels.
- * Run multiple times for an approximation of Gaussian blur.
+ * Blur every head in place on a canvas that already holds the frame.
+ * Shared by the stills and the blurred video, so both hide faces the same way.
  */
-function boxBlurRegion(
+export function blurHeads(
   ctx: CanvasRenderingContext2D,
-  rx: number,
-  ry: number,
-  rw: number,
-  rh: number,
-  radius: number,
+  boxes: BoundingBox[],
 ): void {
-  if (rw <= 0 || rh <= 0) return;
+  const { width, height } = ctx.canvas;
+  smearCanvas ??= document.createElement("canvas");
+  const smearCtx = smearCanvas.getContext("2d");
+  if (!smearCtx) throw new Error("Canvas 2D context not available.");
 
-  const imageData = ctx.getImageData(rx, ry, rw, rh);
-  const { data, width, height } = imageData;
+  for (const bbox of boxes) {
+    const px = bboxToPixels(bbox, width, height);
+    if (px.w <= 0 || px.h <= 0) continue;
 
-  for (let pass = 0; pass < BLUR_ITERATIONS; pass++) {
-    // Horizontal pass
-    const temp = new Uint8ClampedArray(data.length);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        let r = 0,
-          g = 0,
-          b = 0,
-          a = 0,
-          count = 0;
-        for (
-          let kx = Math.max(0, x - radius);
-          kx <= Math.min(width - 1, x + radius);
-          kx++
-        ) {
-          const idx = (y * width + kx) * 4;
-          r += data[idx];
-          g += data[idx + 1];
-          b += data[idx + 2];
-          a += data[idx + 3];
-          count++;
-        }
-        const idx = (y * width + x) * 4;
-        temp[idx] = r / count;
-        temp[idx + 1] = g / count;
-        temp[idx + 2] = b / count;
-        temp[idx + 3] = a / count;
-      }
-    }
+    const longest = Math.max(px.w, px.h);
+    smearCanvas.width = Math.max(2, Math.round((SMEAR_PX * px.w) / longest));
+    smearCanvas.height = Math.max(2, Math.round((SMEAR_PX * px.h) / longest));
+    smearCtx.imageSmoothingQuality = "high";
+    smearCtx.drawImage(
+      ctx.canvas,
+      px.x,
+      px.y,
+      px.w,
+      px.h,
+      0,
+      0,
+      smearCanvas.width,
+      smearCanvas.height,
+    );
 
-    // Vertical pass
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        let r = 0,
-          g = 0,
-          b = 0,
-          a = 0,
-          count = 0;
-        for (
-          let ky = Math.max(0, y - radius);
-          ky <= Math.min(height - 1, y + radius);
-          ky++
-        ) {
-          const idx = (ky * width + x) * 4;
-          r += temp[idx];
-          g += temp[idx + 1];
-          b += temp[idx + 2];
-          a += temp[idx + 3];
-          count++;
-        }
-        const idx = (y * width + x) * 4;
-        data[idx] = r / count;
-        data[idx + 1] = g / count;
-        data[idx + 2] = b / count;
-        data[idx + 3] = a / count;
-      }
-    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(
+      px.x + px.w / 2,
+      px.y + px.h / 2,
+      px.w / 2,
+      px.h / 2,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.clip();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(smearCanvas, px.x, px.y, px.w, px.h);
+    ctx.restore();
   }
-
-  ctx.putImageData(imageData, rx, ry);
 }
 
 /**
@@ -147,13 +124,7 @@ export async function blurFaces(
     canvas.height = frame.bitmap.height;
     ctx.drawImage(frame.bitmap, 0, 0);
 
-    // Blur each face region
-    const frameFaces = facesByFrame.get(frame.frameIndex) ?? [];
-    for (const bbox of frameFaces) {
-      const px = bboxToPixels(bbox, canvas.width, canvas.height);
-      const blurRadius = Math.max(8, Math.floor(px.w / 4));
-      boxBlurRegion(ctx, px.x, px.y, px.w, px.h, blurRadius);
-    }
+    blurHeads(ctx, facesByFrame.get(frame.frameIndex) ?? []);
 
     // Export as JPEG
     const blob = await new Promise<Blob>((resolve, reject) => {

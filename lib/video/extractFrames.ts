@@ -7,21 +7,21 @@ export interface ExtractedFrame {
   bitmap: ImageBitmap;
 }
 
+// A shove or a grab lasts about a second, so short clips are sampled twice a second.
+const SAMPLES_PER_SECOND = 2;
+
 /**
  * Compute which seconds to sample from a video.
- * 1 fps, evenly spaced, max MAX_FRAMES.
+ * Up to 2 fps, evenly spaced, max MAX_FRAMES.
  */
 export function computeSampleTimes(durationSeconds: number): number[] {
   if (durationSeconds <= 0) return [];
-  const totalFrames = Math.floor(durationSeconds);
-  const count = Math.min(totalFrames, MAX_FRAMES);
-  if (count === 0) return durationSeconds > 0 ? [0] : [];
+  const count = Math.min(
+    Math.floor(durationSeconds * SAMPLES_PER_SECOND),
+    MAX_FRAMES,
+  );
+  if (count === 0) return [0];
 
-  if (totalFrames <= MAX_FRAMES) {
-    return Array.from({ length: count }, (_, i) => i);
-  }
-
-  // Evenly space MAX_FRAMES across the duration
   const step = durationSeconds / count;
   return Array.from(
     { length: count },
@@ -30,7 +30,7 @@ export function computeSampleTimes(durationSeconds: number): number[] {
 }
 
 /**
- * Extract JPEG frames from a video file at 1 fps, max 20 frames, 640px wide.
+ * Extract JPEG frames from a video file at up to 2 fps, max 20 frames, 640px wide.
  * Runs entirely in the browser using <video> + <canvas>.
  */
 export async function extractFrames(
