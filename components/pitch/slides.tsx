@@ -1040,62 +1040,63 @@ const VIDEO_CUT: ReadonlyArray<{ id: string; seconds: number; say: string[] }> =
   [
     {
       id: "hook",
-      seconds: 8,
+      seconds: 6,
       say: [
-        "93% of US public schools run security cameras. Every one of them stores every student's face.",
+        "Sid: 93% of US public schools run security cameras. Every one of them stores every student's face.",
       ],
     },
     {
       id: "problem",
-      seconds: 14,
+      seconds: 10,
       say: [
-        "Stored faces leak. In 2021 hackers got into 150,000 Verkada cameras, inside schools. Meta paid Texas 1.4 billion dollars over face data.",
-        "If the face is on the server, it can leak.",
+        "Sid: Stored faces leak. Hackers broke into 150,000 Verkada cameras, inside schools. Meta paid Texas 1.4 billion dollars over face data.",
       ],
     },
     {
       id: "why-now",
-      seconds: 10,
+      seconds: 8,
       say: [
-        "Regulators moved: the FTC banned Rite Aid's face recognition, and the EU banned face databases from CCTV. And vision models can now flag a fight without seeing a face.",
+        "Sid: Regulators are banning face databases. And vision AI can now spot a fight without ever seeing a face.",
       ],
     },
     {
       id: "solution",
-      seconds: 10,
+      seconds: 9,
       say: [
-        "Veil is security cameras that forget faces. Every head is blurred and encrypted in the browser, before footage leaves the building.",
+        "Sid (drag the line): So we built Veil: security cameras that forget faces. Every head is blurred and encrypted in the browser, before footage leaves the building.",
       ],
     },
     {
       id: "demo",
-      seconds: 40,
+      seconds: 52,
       say: [
-        "Switch to a screen recording of the live app for this part.",
-        "A passing period: every head blurred, nothing flagged. Two students grab each other in the gym: flagged as a possible fight.",
-        "The officer marks it a false alarm, it was a hug, and the fight threshold rises at every site. Another hug: not flagged. A student pinned to a wall: still flagged.",
-        "Unlocking a face takes a written reason and lands in the audit log. Edit one byte of a clip, and Verify says Tampered.",
+        "Switch to the app tab. Anshul narrates.",
+        "Passing period: here is a hallway between classes. Every face blurred and locked. Nothing flagged.",
+        "Gym hug: two students grab each other. Faces are blurred, so the AI cannot read expressions. It flags a possible fight.",
+        "Click False alarm: the officer knows it was a hug. Watch the panel: the fight threshold rises, at every site.",
+        "Upload the courtyard hug: another hug, at a different camera. While it uploads, every face is blurred and encrypted on this laptop. Not flagged. It learned.",
+        "Open the collar grab: but a student pinned to a wall? Still flagged. Learning did not hide a real fight.",
       ],
     },
     {
       id: "ai",
-      seconds: 15,
+      seconds: 14,
       say: [
-        "Under the hood: MediaPipe finds heads in the browser. Claude Sonnet 5.5, through the Vercel AI SDK, reads only blurred frames and returns typed events. Officer labels set each type's threshold and the examples Claude sees.",
+        "Anshul: Under the hood: MediaPipe finds every head in the browser. Claude Sonnet 5.5, through the Vercel AI SDK, sees only blurred frames and returns typed events. Every officer label tunes the thresholds and becomes an example Claude learns from.",
       ],
     },
     {
       id: "learning-curve",
-      seconds: 15,
+      seconds: 13,
       say: [
-        `We measured it on the real model. One school goes from ${CURVE_ONE_SITE.first} false alarms to ${CURVE_ONE_SITE.last} in four weeks and still catches ${CURVE_ONE_SITE.caught} of ${CURVE_SUMMARY.realTestEvents} real incidents. A school taught only by a store's labels improves just as much.`,
+        `Sid: We measured it on the real model. One school drops from ${CURVE_ONE_SITE.first} false alarms to ${CURVE_ONE_SITE.last} in four weeks, and still catches ${CURVE_ONE_SITE.caught} of ${CURVE_SUMMARY.realTestEvents} real incidents. A school that never labeled anything, taught only by a store, improves just as much.`,
       ],
     },
     {
       id: "ask",
       seconds: 8,
       say: [
-        "We are Sid and Anshul. We built Veil at this hackathon with Next.js, Supabase, and parallel Claude Code agents. Veil: cameras that forget faces.",
+        "Sid: We're Sid. Anshul: And Anshul. Sid: We built Veil at this hackathon with Next.js, Supabase and Claude. Both: Veil. Cameras that forget faces.",
       ],
     },
   ];
