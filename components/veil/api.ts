@@ -52,4 +52,7 @@ export const veilApi: VeilApi = {
   // Review and learning: clip view labels, learning card, /learning.
   submitFeedback: httpBackend.submitFeedback,
   getLearningStats: httpBackend.getLearningStats,
+  // Face vault: unlock dialog and /audit.
+  unlockFace: httpBackend.unlockFace,
+  listAudit: httpBackend.listAudit,
 };
