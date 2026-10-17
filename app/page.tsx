@@ -1,282 +1,379 @@
-"use client";
-
-import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { z } from "zod";
+import Link from "next/link";
 import {
-  AlertCircle,
-  FileText,
-  Loader2,
-  RotateCcw,
-  Sparkles,
-  Tag,
+  ArrowRight,
+  Brain,
+  ExternalLink,
+  EyeOff,
+  LockKeyholeOpen,
+  ScanLine,
+  Stamp,
 } from "lucide-react";
+import { cn } from "cn";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { MAX_INPUT_CHARS, generateOutputSchema } from "@/lib/schemas";
+import { buttonVariants } from "@/components/ui/button";
+import { FadeIn } from "@/components/veil/FadeIn";
+import { HeroMockup } from "@/components/veil/HeroMockup";
+import { LandingNav } from "@/components/veil/LandingNav";
+import { VeilLogo } from "@/components/veil/VeilLogo";
 
-const successResponseSchema = z.object({
-  data: generateOutputSchema,
-  isFallback: z.boolean(),
-});
-const errorResponseSchema = z.object({ error: z.string() });
+// Every figure on this page comes from SPEC.md and links to its source.
+const SOURCES = {
+  facebook: {
+    label: "Orrick InfoBytes, March 2021",
+    href: "https://infobytes.orrick.com/2021-03-04/court-approves-650-million-biometric-privacy-class-action-settlement/",
+  },
+  euAiAct: {
+    label: "Orrick, April 2025",
+    href: "https://www.orrick.com/en/Insights/2025/04/EU-Commission-Publishes-Guidelines-on-the-Prohibited-AI-Practices-under-the-AI-Act",
+  },
+  verkada: {
+    label: "Verkada product updates, November 2023",
+    href: "https://www.verkada.com/blog/nov-2023-product-updates/",
+  },
+} as const;
 
-type Summary = z.infer<typeof generateOutputSchema>;
-
-type RequestState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "done"; summary: Summary; isFallback: boolean }
-  | { status: "error"; message: string };
-
-const SAMPLES = [
+const STEPS = [
   {
-    label: "Product update",
-    text: "This sprint we cut checkout from five steps to two, added Apple Pay, and saw abandoned carts drop from 31% to 18% in the first week.",
+    icon: EyeOff,
+    title: "Blurred before it leaves the browser",
+    body: "Drop in a video file from any camera. Faces are found and blurred on your device, and each face crop is encrypted with its own key.",
   },
   {
-    label: "Standup notes",
-    text: "Standup notes: Priya is blocked on the Stripe webhook signature check. Marcus finished the onboarding email. Demo dry run moves to Thursday at 3pm. We still need a fallback screen for when the model is slow.",
+    icon: ScanLine,
+    title: "The AI only watches blurred frames",
+    body: "Falls, fights, thefts, and fires are flagged from blurred frames alone, with a time and a confidence: possible fall at 0:14, 0.71.",
   },
   {
-    label: "Announcement",
-    text: "The library extends weekend hours to 10pm starting in November.",
+    icon: Brain,
+    title: "Every label teaches every site",
+    body: "Mark an alert Real or False alarm. Thresholds and examples update for every school and store on Veil, so the next kid tying a shoe pages nobody.",
   },
-];
+  {
+    icon: LockKeyholeOpen,
+    title: "Seeing a face takes a written reason",
+    body: "Pick a reason, write it down, and one face decrypts for 30 seconds. The unlock is logged under your name before the key is released.",
+  },
+  {
+    icon: Stamp,
+    title: "Stamped the moment it uploads",
+    body: "The original file's SHA-256 is signed on upload. Change one byte and Verify says Tampered, with the time of the stamp.",
+  },
+] as const;
 
-const NETWORK_ERROR =
-  "We couldn't reach the server. Check your connection and try again.";
-
-async function requestSummary(text: string): Promise<RequestState> {
-  let response: Response;
-  try {
-    response = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-  } catch {
-    return { status: "error", message: NETWORK_ERROR };
-  }
-
-  let body: unknown;
-  try {
-    body = await response.json();
-  } catch {
-    return { status: "error", message: NETWORK_ERROR };
-  }
-
-  const success = successResponseSchema.safeParse(body);
-  if (response.ok && success.success) {
-    return {
-      status: "done",
-      summary: success.data.data,
-      isFallback: success.data.isFallback,
-    };
-  }
-
-  const failure = errorResponseSchema.safeParse(body);
-  return {
-    status: "error",
-    message: failure.success
-      ? failure.data.error
-      : "Something went wrong on our side. Try again in a moment.",
-  };
-}
-
-export default function Home() {
-  const [text, setText] = useState("");
-  const [state, setState] = useState<RequestState>({ status: "idle" });
-
-  const isLoading = state.status === "loading";
-  const trimmedLength = text.trim().length;
-  const isOverLimit = text.length > MAX_INPUT_CHARS;
-  const canSubmit = trimmedLength > 0 && !isOverLimit && !isLoading;
-
-  async function runSummary() {
-    if (!canSubmit) return;
-    setState({ status: "loading" });
-    setState(await requestSummary(text));
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void runSummary();
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault();
-      void runSummary();
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <div className="relative flex flex-1 flex-col bg-zinc-950 font-[family-name:var(--font-geist-sans)] text-zinc-50">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-indigo-900/25 via-zinc-950 to-zinc-950"
-      />
+    <div className="flex flex-1 flex-col bg-zinc-950 text-zinc-50">
+      <LandingNav />
 
-      <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-16 sm:px-6 md:py-24 lg:px-8">
-        <header className="flex flex-col gap-4">
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            Live demo
-          </span>
-          <h1 className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-6xl">
-            Paste notes. Get the headline.
-          </h1>
-          <p className="max-w-xl text-base leading-relaxed text-zinc-400">
-            Drop in meeting notes, an update, or an announcement. Claude returns
-            a title, a short summary, and tags you can file it under.
-          </p>
-        </header>
+      <header className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-indigo-900/30 via-zinc-950 to-zinc-950"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)] bg-[size:24px_24px]"
+        />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-zinc-500">Try a sample:</span>
-            {SAMPLES.map((sample) => (
-              <button
-                key={sample.label}
-                type="button"
-                onClick={() => setText(sample.text)}
-                disabled={isLoading}
-                className="cursor-pointer rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs font-medium text-zinc-300 transition-all duration-200 hover:border-zinc-600 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {sample.label}
-              </button>
-            ))}
-          </div>
+        <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+          <VeilLogo href="/" />
+          <Link
+            href="/clips"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-all duration-200 hover:bg-white/5 hover:text-white"
+          >
+            Open the app
+          </Link>
+        </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-2 shadow-xl backdrop-blur-md transition-all duration-200 focus-within:border-indigo-500/60">
-            <label htmlFor="notes" className="sr-only">
-              Text to summarize
-            </label>
-            <Textarea
-              id="notes"
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Paste anything up to 4,000 characters..."
-              aria-invalid={isOverLimit}
-              disabled={isLoading}
-              className="min-h-40 resize-none border-0 bg-transparent px-3 py-3 text-base text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-0 dark:bg-transparent md:text-base"
-            />
-            <div className="flex items-center justify-between gap-4 px-2 pb-1 pt-2">
-              <span
-                className={`text-xs tabular-nums ${isOverLimit ? "text-rose-400" : "text-zinc-500"}`}
-              >
-                {text.length.toLocaleString()} /{" "}
-                {MAX_INPUT_CHARS.toLocaleString()}
-                <span className="hidden sm:inline"> · Cmd+Enter to send</span>
+        <div className="relative mx-auto grid min-h-[80vh] max-w-7xl grid-cols-1 items-center gap-16 px-4 pt-8 pb-24 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:px-8">
+          <FadeIn immediate className="flex flex-col gap-6">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
+              <EyeOff className="size-3.5" aria-hidden />
+              For school, store, and hospital safety teams
+            </span>
+            <h1 className="text-5xl font-bold tracking-tight md:text-7xl">
+              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                Security cameras that forget faces.
               </span>
-              <Button
-                type="submit"
-                disabled={!canSubmit}
-                className="h-11 cursor-pointer rounded-xl bg-indigo-600 px-5 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-500 active:bg-indigo-700"
+            </h1>
+            <p className="max-w-xl text-lg leading-relaxed text-zinc-300">
+              Veil blurs and encrypts every face in the browser, lets the AI
+              watch only blurred frames, and makes anyone who wants to see a
+              face write down why.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/clips/new"
+                className={buttonVariants({ size: "lg" })}
               >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-5 w-5" />
-                )}
-                {isLoading ? "Summarizing" : "Summarize"}
-              </Button>
+                Try it with a clip
+                <ArrowRight aria-hidden />
+              </Link>
+              <a
+                href="#how-it-works"
+                className={buttonVariants({ variant: "ghost", size: "lg" })}
+              >
+                See how it works
+              </a>
+            </div>
+          </FadeIn>
+          <FadeIn immediate delay={0.15} className="px-2 pb-6 sm:px-6">
+            <HeroMockup />
+          </FadeIn>
+        </div>
+      </header>
+
+      <main>
+        <section
+          id="problem"
+          aria-labelledby="problem-heading"
+          className="scroll-mt-20 border-t border-zinc-800/80 py-20 md:py-32"
+        >
+          <div className="mx-auto flex max-w-7xl flex-col gap-14 px-4 sm:px-6 lg:px-8">
+            <FadeIn className="flex max-w-3xl flex-col gap-4">
+              <h2
+                id="problem-heading"
+                className="text-3xl font-semibold tracking-tight md:text-4xl"
+              >
+                Every camera records every face. That footage is a liability.
+              </h2>
+              <p className="text-base leading-relaxed text-zinc-400">
+                Schools, stores, and hospitals need cameras for safety. Stored
+                face data is a legal and breach risk, and today&apos;s privacy
+                tools only hide faces on screen.
+              </p>
+            </FadeIn>
+
+            <div className="grid grid-cols-1 divide-y divide-zinc-800 border-y border-zinc-800 md:grid-cols-3 md:divide-x md:divide-y-0">
+              <SourcedFigure
+                figure="$650M"
+                text="What Facebook paid to settle an Illinois biometric privacy class action."
+                source={SOURCES.facebook}
+              />
+              <SourcedFigure
+                figure="7%"
+                text="Of global turnover: the ceiling on EU AI Act fines. Building face databases from CCTV footage is a banned practice."
+                source={SOURCES.euAiAct}
+              />
+              <SourcedFigure
+                figure="On screen only"
+                text="Verkada's Live Face Blur keeps real faces in stored footage, and it only works on Verkada hardware."
+                source={SOURCES.verkada}
+                isPhrase
+              />
             </div>
           </div>
-        </form>
+        </section>
 
-        <section aria-live="polite" className="flex flex-col">
-          <ResultPanel state={state} onRetry={() => void runSummary()} />
+        <section
+          aria-label="What Veil does differently"
+          className="relative overflow-hidden py-24 md:py-36"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-indigo-600/15 via-zinc-950 to-zinc-950"
+          />
+          <FadeIn className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+            <p className="text-4xl font-bold tracking-tight text-balance md:text-6xl">
+              Veil forgets faces{" "}
+              <span className="bg-gradient-to-r from-indigo-300 to-indigo-500 bg-clip-text text-transparent">
+                unless there is a reason to remember.
+              </span>
+            </p>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-400">
+              No face is stored in the clear. No model ever sees one. The only
+              way back to a face is a written reason that stays in the log.
+            </p>
+          </FadeIn>
+        </section>
+
+        <section
+          id="how-it-works"
+          aria-labelledby="how-heading"
+          className="scroll-mt-20 border-t border-zinc-800/80 py-20 md:py-32"
+        >
+          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:px-8">
+            <FadeIn className="flex flex-col gap-4 lg:sticky lg:top-28 lg:self-start">
+              <h2
+                id="how-heading"
+                className="text-3xl font-semibold tracking-tight md:text-4xl"
+              >
+                How a clip moves through Veil
+              </h2>
+              <p className="text-base leading-relaxed text-zinc-400">
+                A safety officer uploads a clip, reviews one alert, and never
+                sees a face they did not ask for. Works with any camera that
+                exports a video file.
+              </p>
+            </FadeIn>
+
+            <ol className="flex flex-col">
+              {STEPS.map(({ icon: Icon, title, body }, index) => (
+                <li
+                  key={title}
+                  className="border-b border-zinc-800/80 py-8 first:pt-0 last:border-b-0"
+                >
+                  <FadeIn
+                    delay={index * 0.05}
+                    className="grid grid-cols-[auto_minmax(0,1fr)] gap-5 sm:gap-8"
+                  >
+                    <span className="font-mono text-sm text-zinc-600 tabular-nums">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-indigo-500/10 p-2.5 text-indigo-400">
+                          <Icon className="size-5" aria-hidden />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {title}
+                        </h3>
+                      </div>
+                      <p className="text-base leading-relaxed text-zinc-300">
+                        {body}
+                      </p>
+                    </div>
+                  </FadeIn>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="px-4 pb-20 sm:px-6 md:pb-32 lg:px-8">
+          <FadeIn className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-indigo-500/30 bg-gradient-to-br from-indigo-600/25 via-zinc-900 to-zinc-900 px-6 py-14 text-center md:px-12 md:py-20">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-24 left-1/2 h-48 w-2/3 -translate-x-1/2 rounded-full bg-indigo-500/30 blur-3xl"
+            />
+            <h2 className="relative text-3xl font-semibold tracking-tight md:text-4xl">
+              Upload a clip and watch every face lock
+            </h2>
+            <p className="relative mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-300">
+              Blurring, encryption, and hashing run in your browser. Use footage
+              you have the rights to.
+            </p>
+            <Link
+              href="/clips/new"
+              className={cn(buttonVariants({ size: "lg" }), "relative mt-8")}
+            >
+              Try it with a clip
+              <ArrowRight aria-hidden />
+            </Link>
+          </FadeIn>
         </section>
       </main>
+
+      <footer className="border-t border-zinc-800">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.4fr)] lg:px-8">
+          <div className="flex flex-col gap-3">
+            <VeilLogo href="/" />
+            <p className="max-w-xs text-sm leading-relaxed text-zinc-500">
+              Security cameras that forget faces unless there is a reason to
+              remember.
+            </p>
+          </div>
+          <FooterColumn
+            title="Product"
+            links={[
+              { href: "/clips/new", label: "Upload a clip" },
+              { href: "/learning", label: "Learning" },
+              { href: "/audit", label: "Audit log" },
+              { href: "/verify", label: "Verify footage" },
+            ]}
+          />
+          <FooterColumn
+            title="Sources"
+            links={Object.values(SOURCES).map((source) => ({
+              href: source.href,
+              label: source.label,
+              isExternal: true,
+            }))}
+          />
+        </div>
+        <div className="border-t border-zinc-800/80">
+          <p className="mx-auto max-w-7xl px-4 py-6 text-xs text-zinc-600 sm:px-6 lg:px-8">
+            2026 Veil. Hackathon prototype. Demo footage uses actors, never
+            real students.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
 
-interface ResultPanelProps {
-  state: RequestState;
-  onRetry: () => void;
+function SourcedFigure({
+  figure,
+  text,
+  source,
+  isPhrase = false,
+}: {
+  figure: string;
+  text: string;
+  source: { label: string; href: string };
+  isPhrase?: boolean;
+}) {
+  return (
+    <FadeIn className="flex flex-col gap-4 py-10 md:px-8 md:first:pl-0 md:last:pr-0">
+      <a
+        href={source.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex flex-col gap-4 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+      >
+        <span
+          className={cn(
+            "bg-gradient-to-br from-white to-zinc-500 bg-clip-text font-bold tracking-tight text-transparent transition-all duration-200 group-hover:from-indigo-200 group-hover:to-indigo-500",
+            isPhrase ? "text-4xl md:text-5xl" : "text-6xl md:text-7xl",
+          )}
+        >
+          {figure}
+        </span>
+        <span className="text-base leading-relaxed text-zinc-300">{text}</span>
+        <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500 transition-all duration-200 group-hover:text-indigo-300">
+          Source: {source.label}
+          <ExternalLink className="size-3.5" aria-hidden />
+          <span className="sr-only">(opens in a new tab)</span>
+        </span>
+      </a>
+    </FadeIn>
+  );
 }
 
-function ResultPanel({ state, onRetry }: ResultPanelProps) {
-  if (state.status === "idle") {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-800 px-6 py-12 text-center">
-        <div className="rounded-xl bg-indigo-500/10 p-2.5 text-indigo-400">
-          <FileText className="h-6 w-6" />
-        </div>
-        <p className="text-sm text-zinc-400">
-          Your summary shows up here. Pick a sample above to see it work.
-        </p>
-      </div>
-    );
-  }
-
-  if (state.status === "loading") {
-    return (
-      <Card className="gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 ring-0">
-        <div className="h-6 w-2/3 animate-pulse rounded-lg bg-zinc-800" />
-        <div className="flex flex-col gap-2">
-          <div className="h-4 w-full animate-pulse rounded bg-zinc-800" />
-          <div className="h-4 w-11/12 animate-pulse rounded bg-zinc-800" />
-          <div className="h-4 w-3/5 animate-pulse rounded bg-zinc-800" />
-        </div>
-        <div className="flex gap-2">
-          <div className="h-6 w-16 animate-pulse rounded-full bg-zinc-800" />
-          <div className="h-6 w-20 animate-pulse rounded-full bg-zinc-800" />
-        </div>
-      </Card>
-    );
-  }
-
-  if (state.status === "error") {
-    return (
-      <div
-        role="alert"
-        className="flex items-start gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5"
-      >
-        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
-        <p className="text-sm leading-relaxed text-rose-200">{state.message}</p>
-      </div>
-    );
-  }
-
-  const { summary, isFallback } = state;
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { href: string; label: string; isExternal?: boolean }[];
+}) {
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-2 gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl ring-0 duration-300">
-      <h2 className="text-2xl font-semibold tracking-tight text-white">
-        {summary.title}
-      </h2>
-      <p className="text-base leading-relaxed text-zinc-300">
-        {summary.summary}
-      </p>
-      {summary.tags.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {summary.tags.map((tag) => (
-            <li
-              key={tag}
-              className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400"
-            >
-              <Tag className="h-3 w-3" />
-              {tag}
-            </li>
-          ))}
-        </ul>
-      )}
-      {isFallback && (
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onRetry}
-          className="h-11 w-fit cursor-pointer rounded-xl border border-zinc-700 bg-zinc-800 px-5 text-zinc-100 hover:bg-zinc-700"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Try again
-        </Button>
-      )}
-    </Card>
+    <div className="flex flex-col gap-3">
+      <h2 className="text-sm font-semibold text-zinc-200">{title}</h2>
+      <ul className="flex flex-col gap-2">
+        {links.map((link) => (
+          <li key={link.href}>
+            {link.isExternal ? (
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-all duration-200 hover:text-white"
+              >
+                {link.label}
+                <ExternalLink className="size-3.5" aria-hidden />
+              </a>
+            ) : (
+              <Link
+                href={link.href}
+                className="text-sm text-zinc-500 transition-all duration-200 hover:text-white"
+              >
+                {link.label}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
