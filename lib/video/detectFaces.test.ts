@@ -100,6 +100,28 @@ describe("detectFaces", () => {
     );
   });
 
+  it("falls back to the CPU when the GPU person model will not load", async () => {
+    const { ObjectDetector } = await import("@mediapipe/tasks-vision");
+    const create = (
+      ObjectDetector as unknown as {
+        createFromOptions: ReturnType<typeof vi.fn>;
+      }
+    ).createFromOptions;
+    create.mockRejectedValueOnce(new Error("WebGL unavailable"));
+
+    const result = await detectFaces([makeFakeFrame(0)]);
+
+    expect(result.totalFaces).toBe(1);
+    const delegates = create.mock.calls
+      .slice(-2)
+      .map(
+        (call) =>
+          (call[1] as { baseOptions: { delegate: string } }).baseOptions
+            .delegate,
+      );
+    expect(delegates).toEqual(["GPU", "CPU"]);
+  });
+
   it("handles frames with no faces", async () => {
     const { FaceDetector } = await import("@mediapipe/tasks-vision");
     const mockDetector = await (
