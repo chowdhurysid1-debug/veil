@@ -207,7 +207,7 @@ export function UploadFlow() {
   const activeStep = isError ? phase.failedStep : phase.activeStep;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <section
         aria-label="Upload progress"
         className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6"
@@ -527,7 +527,7 @@ function UploadDone({
   const filmstrip = frames.filter((_, index) => index % 3 === 0).slice(0, 7);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <section className="flex flex-col gap-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <div className="rounded-xl bg-emerald-500/15 p-2.5 text-emerald-400">
