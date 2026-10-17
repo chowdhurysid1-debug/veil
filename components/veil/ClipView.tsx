@@ -3,7 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CircleCheck, ShieldCheck, Stamp } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleCheck,
+  FileCheck,
+  ShieldCheck,
+  Stamp,
+} from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
@@ -110,6 +116,13 @@ function ClipReview({
             <ShieldCheck className="size-3.5" aria-hidden />
             {pluralize(clip.facesLocked, "face")} locked, 0 in the clear
           </span>
+          <Link
+            href={`/verify?clip=${clip.id}`}
+            className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-medium text-zinc-400 outline-none transition-all duration-200 hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <FileCheck className="size-3.5" aria-hidden />
+            Verify footage
+          </Link>
         </div>
       </header>
 

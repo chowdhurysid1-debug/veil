@@ -40,7 +40,7 @@ export function NavLinks({ orientation, activeHref }: NavLinksProps) {
                 "flex items-center rounded-lg font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500",
                 isVertical
                   ? "gap-3 px-3 py-2.5 text-sm"
-                  : "justify-center gap-1.5 px-2 py-2 text-xs whitespace-nowrap",
+                  : "justify-center gap-1 px-1.5 py-2 text-xs whitespace-nowrap",
                 isActive
                   ? "bg-zinc-900 text-white ring-1 ring-zinc-800"
                   : "text-zinc-400 hover:bg-white/5 hover:text-white",

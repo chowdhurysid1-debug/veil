@@ -1,20 +1,24 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { FileCheck } from "lucide-react";
 
 import { PageContainer, PageHeader } from "@/components/veil/PageHeader";
-import { EmptyState } from "@/components/veil/States";
+import { VerifyPanel, VerifySkeleton } from "@/components/veil/VerifyPanel";
 
-export const metadata: Metadata = { title: "Verify" };
+export const metadata: Metadata = {
+  title: "Verify",
+  description: "Check a video file against the stamp it got at upload.",
+};
 
-export default function Page() {
+export default function VerifyPage() {
   return (
     <PageContainer>
-      <PageHeader title="Verify" description="Check a clip against the stamp it got at upload." />
-      <EmptyState
-        icon={FileCheck}
-        title="Nothing here yet"
-        description="This screen is being built next."
+      <PageHeader
+        title="Verify footage"
+        description="Prove a file is the footage that was stamped at upload. Change one byte and the hash stops matching."
       />
+      <Suspense fallback={<VerifySkeleton />}>
+        <VerifyPanel />
+      </Suspense>
     </PageContainer>
   );
 }
