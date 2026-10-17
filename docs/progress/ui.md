@@ -14,10 +14,10 @@ One line per finished milestone: id, what shipped, commit hash.
 
 ## Contract requests
 
-1. **Routes the UI reads that the plan does not list (Tab B).** `lib/contracts.ts` already has the shapes; the routes are missing from `docs/PLAN.md`:
+1. ~~Routes the UI reads that the plan does not list (Tab B).~~ Handled on `feat/backend` (B3, B4), not yet on main. `lib/contracts.ts` already has the shapes; the routes are missing from `docs/PLAN.md`:
    - `GET /api/clips` returning `ClipSummary[]` (newest first) for the Clips screen.
    - `GET /api/clips/:id` returning `ClipDetail` for the clip view.
-2. **Site id for uploads.** The upload screen posts `siteId = MOCK_SITES[0].id` (`3f2b8c1e-5d4a-4b7e-9c1f-2a6d8e0b4c71`, Demo High School). Please seed Demo High School with that id, or add `GET /api/sites` so the UI can look it up.
+2. ~~Site id for uploads.~~ Handled: `lib/learning/seed.ts` seeds Demo High School with the same id. The upload screen posts `siteId = MOCK_SITES[0].id` (`3f2b8c1e-5d4a-4b7e-9c1f-2a6d8e0b4c71`, Demo High School). Please seed Demo High School with that id, or add `GET /api/sites` so the UI can look it up.
 3. **Analysis status on `ClipDetail` (integrator, optional).** `ClipDetail` cannot tell "no events" apart from "analysis failed". Proposed: `analysisStatus: z.enum(["complete", "unavailable"])` on `clipDetailSchema`, so the clip view can show "Analysis unavailable, review manually" after a reload, not only right after upload.
 4. ~~Pipeline progress semantics (Tab A).~~ Resolved: Tab A's `processClip` reports progress within each step, which is how the upload screen reads it.
-5. **Vault object format (Tab B).** The UI fetches `UnlockResponse.ciphertextUrl` and base64-encodes the response body before calling `decryptFace(ciphertextBase64, rawKeyBase64, ivBase64)`. So the vault object behind that URL must be the raw ciphertext bytes (base64-decoded `LockedFace.ciphertextBase64`), not base64 text.
+5. ~~Vault object format (Tab B).~~ Handled: B3 stores decoded ciphertext bytes. The UI fetches `UnlockResponse.ciphertextUrl` and base64-encodes the response body before calling `decryptFace(ciphertextBase64, rawKeyBase64, ivBase64)`. So the vault object behind that URL must be the raw ciphertext bytes (base64-decoded `LockedFace.ciphertextBase64`), not base64 text.
