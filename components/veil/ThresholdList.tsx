@@ -10,6 +10,7 @@ import {
   EVENT_TYPE_LABELS,
   formatConfidence,
   formatPercent,
+  isThresholdShown,
   pluralize,
 } from "./format";
 
@@ -33,7 +34,7 @@ export function ThresholdList({ rows, highlightType }: ThresholdListProps) {
 
   return (
     <ul className="flex flex-col divide-y divide-zinc-800/80">
-      {rows.map((row) => (
+      {rows.filter(isThresholdShown).map((row) => (
         <ThresholdItem
           key={row.type}
           row={row}

@@ -15,6 +15,15 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   other: "Other",
 };
 
+// Fire is not part of the demo, so its threshold row stays hidden until an
+// officer actually labels a fire.
+export function isThresholdShown(row: {
+  type: EventType;
+  labels: number;
+}): boolean {
+  return row.type !== "fire" || row.labels > 0;
+}
+
 export const FEEDBACK_LABELS: Record<FeedbackLabel, string> = {
   real: "Real",
   false_alarm: "False alarm",

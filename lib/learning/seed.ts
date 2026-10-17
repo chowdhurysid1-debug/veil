@@ -29,7 +29,7 @@ interface SeedLabel {
   note: string | null;
 }
 
-// No crouching or shoe-tying false alarm on purpose: the demo teaches that one live.
+// No high-five false alarm on purpose: the demo teaches that one live.
 export const SEED_LABELS: readonly SeedLabel[] = [
   {
     siteIndex: 0,
@@ -96,10 +96,11 @@ export const SEED_LABELS: readonly SeedLabel[] = [
   {
     siteIndex: 0,
     daysAgo: 5,
-    type: "fire",
+    type: "other",
     label: "real",
-    description: "Smoke rises from a trash can in the hallway.",
-    note: "Small trash fire, extinguished.",
+    description:
+      "A person reaches up and covers the hallway camera with a sheet of paper, then walks away.",
+    note: "Camera covered. Facilities restored it.",
   },
   {
     siteIndex: 0,
@@ -201,10 +202,11 @@ export const SEED_LABELS: readonly SeedLabel[] = [
   {
     siteIndex: 1,
     daysAgo: 1,
-    type: "fire",
+    type: "theft",
     label: "real",
-    description: "Flames are visible on a stovetop in the staff break room.",
-    note: null,
+    description:
+      "A person cuts the lock on a bike at the rack by the entrance and rides off on it.",
+    note: "Customer reported the bike stolen.",
   },
 ];
 

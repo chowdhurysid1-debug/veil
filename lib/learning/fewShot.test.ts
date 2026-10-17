@@ -58,7 +58,7 @@ describe("selectExamples", () => {
     );
     expect(
       new Set(selectExamples(seed).map((example) => example.eventType)),
-    ).toEqual(new Set(["fall", "fight", "theft", "fire"]));
+    ).toEqual(new Set(["fall", "fight", "theft", "other"]));
   });
 
   it("never passes ids, timestamps, or site names to the model", () => {

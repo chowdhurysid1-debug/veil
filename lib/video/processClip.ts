@@ -23,8 +23,8 @@ export class PipelineError extends Error {
 
 /**
  * Process a video clip through the full pipeline:
- * 1. Extract frames (1 fps, max 20, 640px wide)
- * 2. Detect faces (MediaPipe)
+ * 1. Extract frames (up to 2 fps, max 20, 640px wide)
+ * 2. Detect heads (MediaPipe faces, tiled faces, and people)
  * 3. Blur faces on canvas
  * 4. Encrypt each face crop (AES-GCM 256)
  * 5. Hash original file + each blurred frame (SHA-256)

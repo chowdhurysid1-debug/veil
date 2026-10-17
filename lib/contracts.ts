@@ -112,6 +112,8 @@ export const createClipRequestSchema = processedClipSchema.extend({
 export const createClipResponseSchema = z.object({
   clipId: z.uuid(),
   signature: z.string().min(1),
+  // Proves to /api/clips/:id/video that this browser uploaded the clip.
+  videoUploadToken: z.string().regex(/^[a-f0-9]{64}$/),
   stampedAt: z.iso.datetime(),
   facesLocked: z.int().min(0),
   framesStored: z.int().min(0),
@@ -158,7 +160,16 @@ export const clipDetailSchema = clipSummarySchema.extend({
   frames: z.array(clipFrameSchema),
   events: z.array(clipEventSchema),
   faces: z.array(lockedFaceSummarySchema),
+  // Every frame of the clip with every head blurred. Null when the browser could not render one.
+  videoUrl: z.url().nullable(),
 });
+
+export const videoUploadRequestSchema = z.object({
+  token: z.string().max(128),
+});
+
+// The browser PUTs the blurred MP4 it rendered straight to storage with this one-time URL.
+export const videoUploadResponseSchema = z.object({ uploadUrl: z.url() });
 
 // ---------- API: learning ----------
 
@@ -263,6 +274,8 @@ export type AnalyzeResponse = z.infer<typeof analyzeResponseSchema>;
 export type ClipSummary = z.infer<typeof clipSummarySchema>;
 export type ClipFrame = z.infer<typeof clipFrameSchema>;
 export type ClipDetail = z.infer<typeof clipDetailSchema>;
+export type VideoUploadRequest = z.infer<typeof videoUploadRequestSchema>;
+export type VideoUploadResponse = z.infer<typeof videoUploadResponseSchema>;
 export type LearningStats = z.infer<typeof learningStatsSchema>;
 export type FeedbackRequest = z.infer<typeof feedbackRequestSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;

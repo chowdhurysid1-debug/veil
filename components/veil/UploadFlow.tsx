@@ -9,6 +9,7 @@ import {
   CircleCheck,
   CloudUpload,
   EyeOff,
+  Film,
   LoaderCircle,
   LockKeyhole,
   RotateCcw,
@@ -28,7 +29,7 @@ import {
   type PipelineProgress,
   type ProcessedFrame,
 } from "@/lib/contracts";
-import { processClip } from "@/lib/video";
+import { processClip, renderBlurredVideo } from "@/lib/video";
 
 import { veilApi } from "./api";
 import { CountUp } from "./CountUp";
@@ -40,6 +41,12 @@ import {
   pluralize,
 } from "./format";
 import { FrameImage, frameDataUrl } from "./FrameImage";
+import {
+  DEMO_PATH_CLIPS,
+  MORE_INCIDENT_CLIPS,
+  SAMPLE_CLIP_BASE_PATH,
+  type SampleClip,
+} from "./sampleClips";
 
 const STEPS = [
   {
@@ -59,13 +66,18 @@ const STEPS = [
     detail: "SHA-256 of the original file, signed by the server on upload.",
   },
   {
+    label: "Blur the full video",
+    detail: "Every frame, every head, 10 times a second. The original never uploads.",
+  },
+  {
     label: "Analyze blurred frames",
     detail: "The AI only ever sees blurred frames.",
   },
 ] as const;
 
 const STAMP_STEP = 3;
-const ANALYZE_STEP = 4;
+const VIDEO_STEP = 4;
+const ANALYZE_STEP = 5;
 
 const PIPELINE_STEP_INDEX: Record<PipelineProgress["step"], number> = {
   frames: 0,
@@ -94,6 +106,7 @@ type Phase =
       stampedAt: string;
       frames: ProcessedFrame[];
       analysis: AnalyzeResponse | null;
+      isVideoSaved: boolean;
     }
   | {
       kind: "error";
@@ -146,6 +159,37 @@ export function UploadFlow() {
         siteId: DEMO_SITE_ID,
       });
 
+      // The clip is already stored and blurred. If analysis fails, the officer
+      // reviews it manually; the upload still counts as done. It runs on the
+      // server while this browser blurs the video.
+      const analysisPromise = veilApi
+        .analyzeClip(created.clipId)
+        .catch(() => null);
+
+      activeStep = VIDEO_STEP;
+      setPhase({
+        kind: "running",
+        file,
+        activeStep,
+        stepProgress: 0,
+        message: "Blurring every frame",
+        facesLocked,
+      });
+      const isVideoSaved = await saveBlurredVideo(
+        file,
+        created.clipId,
+        created.videoUploadToken,
+        (done, total) =>
+          setPhase({
+            kind: "running",
+            file,
+            activeStep: VIDEO_STEP,
+            stepProgress: done / total,
+            message: `Blurred frame ${done} of ${total}`,
+            facesLocked,
+          }),
+      );
+
       activeStep = ANALYZE_STEP;
       setPhase({
         kind: "running",
@@ -155,11 +199,7 @@ export function UploadFlow() {
         message: "Checking against labels from every site",
         facesLocked,
       });
-      // The clip is already stored and blurred. If analysis fails, the officer
-      // reviews it manually; the upload still counts as done.
-      const analysis = await veilApi
-        .analyzeClip(created.clipId)
-        .catch(() => null);
+      const analysis = await analysisPromise;
 
       setPhase({
         kind: "done",
@@ -169,6 +209,7 @@ export function UploadFlow() {
         stampedAt: created.stampedAt,
         frames: processed.frames,
         analysis,
+        isVideoSaved,
       });
     } catch (error) {
       setPhase({
@@ -186,9 +227,7 @@ export function UploadFlow() {
   }
 
   if (phase.kind === "idle") {
-    return (
-      <DropZone onFile={(file) => void run(file)} />
-    );
+    return <DropZone onFile={(file) => void run(file)} />;
   }
 
   if (phase.kind === "done") {
@@ -323,6 +362,8 @@ function DropZone({ onFile }: { onFile: (file: File) => void }) {
           if (file) onFile(file);
         }}
       />
+
+      <SamplePicker onFile={onFile} />
 
       <ul className="grid gap-3 sm:grid-cols-3">
         {[
@@ -539,6 +580,13 @@ function UploadDone({
         </div>
 
         <div className="flex flex-col gap-3" aria-live="polite">
+          {!phase.isVideoSaved && (
+            <ResultLine
+              tone="zinc"
+              title="Blurred video unavailable"
+              detail="This browser could not blur the full video. The blurred frames are saved for review."
+            />
+          )}
           {analysis === null || analysis.isFallback ? (
             <ResultLine
               tone="amber"
@@ -567,7 +615,7 @@ function UploadDone({
                 <ResultLine
                   tone="emerald"
                   title="Nothing flagged"
-                  detail="The AI found no falls, fights, thefts, or fires in the blurred frames."
+                  detail="The AI found no falls, fights, thefts, or tampering in the blurred frames."
                 />
               )}
               <p className="text-xs text-zinc-500">
@@ -637,6 +685,146 @@ function ResultLine({
         </p>
         <p className="text-sm leading-relaxed text-zinc-400">{detail}</p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Render the full clip with every head blurred and send it to storage.
+ * Returns false instead of throwing: the clip is already saved with blurred
+ * frames, so a browser without video encoding still finishes the upload.
+ */
+async function saveBlurredVideo(
+  file: File,
+  clipId: string,
+  videoUploadToken: string,
+  onProgress: (done: number, total: number) => void,
+): Promise<boolean> {
+  try {
+    const video = await renderBlurredVideo(file, onProgress);
+    if (!video) return false;
+    const { uploadUrl } = await veilApi.createVideoUpload(clipId, {
+      token: videoUploadToken,
+    });
+    await veilApi.uploadVideo(uploadUrl, video);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function SamplePicker({ onFile }: { onFile: (file: File) => void }) {
+  const [loadingFile, setLoadingFile] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function pick(sample: SampleClip) {
+    setLoadingFile(sample.file);
+    setError(null);
+    try {
+      const response = await fetch(`${SAMPLE_CLIP_BASE_PATH}${sample.file}`);
+      if (!response.ok) throw new Error(`Sample answered ${response.status}`);
+      const blob = await response.blob();
+      onFile(new File([blob], sample.file, { type: "video/mp4" }));
+    } catch {
+      setError("That sample clip did not load. Try again or drop your own.");
+      setLoadingFile(null);
+    }
+  }
+
+  return (
+    <section aria-labelledby="samples-heading" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h2
+          id="samples-heading"
+          className="flex items-center gap-2 text-sm font-medium text-zinc-100"
+        >
+          <Film className="size-4 text-indigo-400" aria-hidden />
+          Or run a sample clip
+        </h2>
+        <p className="text-sm text-zinc-500">
+          Stock footage with actors. Run the first four in order to watch the
+          AI learn from one label.
+        </p>
+      </div>
+
+      <SampleGroup
+        label="The demo, in order"
+        samples={DEMO_PATH_CLIPS}
+        isNumbered
+        loadingFile={loadingFile}
+        onPick={(sample) => void pick(sample)}
+      />
+      <SampleGroup
+        label="More incidents"
+        samples={MORE_INCIDENT_CLIPS}
+        loadingFile={loadingFile}
+        onPick={(sample) => void pick(sample)}
+      />
+
+      {error && (
+        <p role="alert" className="text-sm text-rose-300">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function SampleGroup({
+  label,
+  samples,
+  isNumbered = false,
+  loadingFile,
+  onPick,
+}: {
+  label: string;
+  samples: SampleClip[];
+  isNumbered?: boolean;
+  loadingFile: string | null;
+  onPick: (sample: SampleClip) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {samples.map((sample, index) => {
+          const isLoading = loadingFile === sample.file;
+          return (
+            <li key={sample.file}>
+              <button
+                type="button"
+                onClick={() => onPick(sample)}
+                disabled={loadingFile !== null}
+                className="group flex h-full min-h-28 w-full cursor-pointer flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-left outline-none transition-all duration-200 hover:border-zinc-600 hover:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-wait disabled:opacity-60"
+              >
+                <span className="flex items-center justify-between gap-2 font-mono text-[10px] tracking-[0.14em] text-zinc-500 uppercase">
+                  <span>
+                    {isNumbered && `${String(index + 1).padStart(2, "0")} / `}
+                    {sample.camera}
+                  </span>
+                  {isLoading ? (
+                    <LoaderCircle
+                      className="size-3.5 animate-spin text-indigo-300"
+                      aria-label="Loading"
+                    />
+                  ) : (
+                    <ArrowRight
+                      className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                      aria-hidden
+                    />
+                  )}
+                </span>
+                <span className="text-sm font-medium text-zinc-100">
+                  {sample.title}
+                </span>
+                <span className="text-xs leading-relaxed text-zinc-400">
+                  {sample.watchFor}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

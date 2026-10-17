@@ -5,9 +5,22 @@ import {
   formatDay,
   formatConfidence,
   formatPercent,
+  isThresholdShown,
   pluralize,
   timelinePosition,
 } from "./format";
+
+describe("isThresholdShown", () => {
+  it("hides fire until someone has labeled a fire", () => {
+    expect(isThresholdShown({ type: "fire", labels: 0 })).toBe(false);
+    expect(isThresholdShown({ type: "fire", labels: 1 })).toBe(true);
+  });
+
+  it("always shows the demo's types, even with no labels", () => {
+    expect(isThresholdShown({ type: "other", labels: 0 })).toBe(true);
+    expect(isThresholdShown({ type: "fight", labels: 0 })).toBe(true);
+  });
+});
 
 describe("formatClipTime", () => {
   it("rounds to the nearest second", () => {

@@ -185,6 +185,7 @@ function ClipReview({
           onSeek={setCurrentIndex}
           onFaceSelect={openUnlock}
           afterFrame={alerts}
+          videoUrl={clip.videoUrl}
         />
 
         <aside className="flex flex-col gap-8 lg:sticky lg:top-6 lg:self-start">

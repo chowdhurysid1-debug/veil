@@ -25,8 +25,19 @@ import { EVENT_TYPE_LABELS, formatClipTime } from "./format";
 import { FrameImage } from "./FrameImage";
 
 const PLAYBACK_MS = 700;
+const DEFAULT_ASPECT_RATIO = 16 / 9;
 
 export type LockedFaceSummary = ClipDetail["faces"][number];
+
+/** The last sampled frame at or before `seconds`: the one the video is showing. */
+export function frameIndexAt(frames: ClipFrame[], seconds: number): number {
+  let index = 0;
+  for (let i = 0; i < frames.length; i++) {
+    if (frames[i].tSeconds <= seconds) index = i;
+    else break;
+  }
+  return index;
+}
 
 interface FramePlayerProps {
   frames: ClipFrame[];
@@ -37,6 +48,8 @@ interface FramePlayerProps {
   onFaceSelect?: (face: LockedFaceSummary) => void;
   /** Rendered directly under the frame, above the transport controls. */
   afterFrame?: ReactNode;
+  /** The fully blurred video. Without it, the player steps through the stills. */
+  videoUrl?: string | null;
 }
 
 export function FramePlayer({
@@ -47,11 +60,25 @@ export function FramePlayer({
   onSeek,
   onFaceSelect,
   afterFrame,
+  videoUrl = null,
 }: FramePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO);
+  const [videoSeconds, setVideoSeconds] = useState<number | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  // The index playback itself moved to, so seeking only follows outside changes.
+  const playbackIndexRef = useRef<number | null>(null);
+  const hasVideo = videoUrl !== null;
   const lastIndex = frames.length - 1;
   const frame = frames[currentIndex];
-  const endSeconds = frames[lastIndex]?.tSeconds ?? 0;
+  const lastFrameSeconds = frames[lastIndex]?.tSeconds ?? 0;
+  const endSeconds = videoDuration ?? lastFrameSeconds;
+  const isVideoPlaying = hasVideo && isPlaying;
+  const shownSeconds =
+    isVideoPlaying && videoSeconds !== null
+      ? videoSeconds
+      : (frame?.tSeconds ?? 0);
   const facesInFrame = faces.filter(
     (face) => face.frameIndex === frame?.frameIndex,
   );
@@ -59,8 +86,56 @@ export function FramePlayer({
     (event) => event.frameIndex === frame?.frameIndex,
   );
 
+  // Stills keep their own shape too, so face boxes line up on portrait footage.
+  const firstFrameUrl = frames[0]?.blurredUrl;
   useEffect(() => {
-    if (!isPlaying) return;
+    if (hasVideo || !firstFrameUrl) return;
+    const image = new window.Image();
+    image.onload = () => {
+      if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+        setAspectRatio(image.naturalWidth / image.naturalHeight);
+      }
+    };
+    image.src = firstFrameUrl;
+  }, [hasVideo, firstFrameUrl]);
+
+  // Video: follow the playhead and mark the sampled frame it is on.
+  useEffect(() => {
+    if (!isVideoPlaying) return;
+    let animationFrame = 0;
+    let lastReported = -1;
+    const tick = () => {
+      const video = videoRef.current;
+      if (video) {
+        setVideoSeconds(video.currentTime);
+        const index = frameIndexAt(frames, video.currentTime);
+        if (index !== lastReported) {
+          lastReported = index;
+          playbackIndexRef.current = index;
+          onSeek(index);
+        }
+      }
+      animationFrame = requestAnimationFrame(tick);
+    };
+    animationFrame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isVideoPlaying, frames, onSeek]);
+
+  // Video: jump to the frame picked outside playback (timeline, alert, face).
+  const frameSeconds = frame?.tSeconds;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || frameSeconds === undefined) return;
+    if (playbackIndexRef.current === currentIndex) return;
+    playbackIndexRef.current = null;
+    if (Math.abs(video.currentTime - frameSeconds) > 0.05) {
+      video.currentTime = frameSeconds;
+    }
+  }, [currentIndex, frameSeconds]);
+
+  // Stills: step through the sampled frames.
+  useEffect(() => {
+    if (!isPlaying || hasVideo) return;
     const timer = setInterval(() => {
       if (currentIndex >= lastIndex) {
         setIsPlaying(false);
@@ -69,15 +144,39 @@ export function FramePlayer({
       }
     }, PLAYBACK_MS);
     return () => clearInterval(timer);
-  }, [isPlaying, currentIndex, lastIndex, onSeek]);
+  }, [isPlaying, hasVideo, currentIndex, lastIndex, onSeek]);
 
   function togglePlay() {
+    const video = videoRef.current;
+    if (hasVideo && video) {
+      if (!video.paused) {
+        video.pause();
+        return;
+      }
+      if (video.ended) video.currentTime = 0;
+      void video.play().catch(() => setIsPlaying(false));
+      return;
+    }
     if (!isPlaying && currentIndex >= lastIndex) onSeek(0);
     setIsPlaying((playing) => !playing);
   }
 
-  function step(delta: number) {
+  function stopPlayback() {
+    videoRef.current?.pause();
     setIsPlaying(false);
+  }
+
+  // Paused video rests on a sampled frame, where the locked face boxes belong.
+  function handleVideoPause() {
+    setIsPlaying(false);
+    setVideoSeconds(null);
+    const video = videoRef.current;
+    const settled = frames[playbackIndexRef.current ?? currentIndex];
+    if (video && settled) video.currentTime = settled.tSeconds;
+  }
+
+  function step(delta: number) {
+    stopPlayback();
     onSeek(Math.min(lastIndex, Math.max(0, currentIndex + delta)));
   }
 
@@ -86,13 +185,41 @@ export function FramePlayer({
   return (
     <section aria-label="Blurred frames" className="flex flex-col gap-4">
       <div className="relative aspect-video overflow-hidden border border-hairline bg-panel">
-        <FrameImage
-          src={frame.blurredUrl}
-          alt={`Blurred frame ${currentIndex + 1} of ${frames.length}, at ${formatClipTime(frame.tSeconds)}`}
-          priority
-        />
+        <div
+          className="relative mx-auto h-full max-w-full"
+          style={{ aspectRatio }}
+        >
+          {hasVideo ? (
+            <video
+              ref={videoRef}
+              src={videoUrl ?? undefined}
+              muted
+              playsInline
+              preload="auto"
+              aria-label="Blurred video of the clip. Every head is blurred in every frame."
+              onLoadedMetadata={(event) => {
+                const video = event.currentTarget;
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                  setAspectRatio(video.videoWidth / video.videoHeight);
+                }
+                if (Number.isFinite(video.duration)) {
+                  setVideoDuration(video.duration);
+                }
+                video.currentTime = frame.tSeconds;
+              }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={handleVideoPause}
+              className="absolute inset-0 size-full object-cover"
+            />
+          ) : (
+            <FrameImage
+              src={frame.blurredUrl}
+              alt={`Blurred frame ${currentIndex + 1} of ${frames.length}, at ${formatClipTime(frame.tSeconds)}`}
+              priority
+            />
+          )}
 
-        {facesInFrame.map((face) => {
+          {!isVideoPlaying && facesInFrame.map((face) => {
           const style = {
             left: `${face.bbox.x * 100}%`,
             top: `${face.bbox.y * 100}%`,
@@ -130,14 +257,21 @@ export function FramePlayer({
             </span>
           );
         })}
+        </div>
 
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-void/80 to-transparent p-3 sm:p-4">
           <span className="font-mono text-[10px] tracking-[0.14em] text-ink uppercase tabular-nums sm:text-xs">
-            T+{formatClipTime(frame.tSeconds)}
+            T+{formatClipTime(shownSeconds)}
             <span className="text-ink-dim">
-              {" "}
-              / Frame {String(currentIndex + 1).padStart(2, "0")} of{" "}
-              {String(frames.length).padStart(2, "0")}
+              {isVideoPlaying ? (
+                " / Live blurred video"
+              ) : (
+                <>
+                  {" "}
+                  / Frame {String(currentIndex + 1).padStart(2, "0")} of{" "}
+                  {String(frames.length).padStart(2, "0")}
+                </>
+              )}
             </span>
           </span>
           {eventsInFrame.length > 0 && (
@@ -155,7 +289,9 @@ export function FramePlayer({
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-void/80 to-transparent p-3 sm:p-4">
           <span className="font-mono text-[10px] tracking-[0.14em] text-ink uppercase sm:text-xs">
-            Faces in frame {String(facesInFrame.length).padStart(2, "0")}
+            {isVideoPlaying
+              ? "Every head blurred"
+              : `Faces in frame ${String(facesInFrame.length).padStart(2, "0")}`}
           </span>
           <span className="hidden items-center gap-1.5 font-mono text-[10px] tracking-[0.14em] text-ink-muted uppercase sm:inline-flex sm:text-xs">
             <LockKeyhole className="size-3" aria-hidden />
@@ -172,7 +308,9 @@ export function FramePlayer({
           size="icon-lg"
           className="size-11"
           onClick={togglePlay}
-          aria-label={isPlaying ? "Pause" : "Play frames"}
+          aria-label={
+            isPlaying ? "Pause" : hasVideo ? "Play video" : "Play frames"
+          }
         >
           {isPlaying ? <Pause aria-hidden /> : <Play aria-hidden />}
         </Button>
@@ -197,7 +335,7 @@ export function FramePlayer({
           <ChevronRight aria-hidden />
         </Button>
         <span className="ml-auto font-mono text-xs tracking-[0.14em] text-ink-dim tabular-nums">
-          {formatClipTime(frame.tSeconds)} / {formatClipTime(endSeconds)}
+          {formatClipTime(shownSeconds)} / {formatClipTime(endSeconds)}
         </span>
       </div>
 
@@ -205,8 +343,13 @@ export function FramePlayer({
         frames={frames}
         events={events}
         currentIndex={currentIndex}
+        playheadRatio={
+          isVideoPlaying && videoSeconds !== null && lastFrameSeconds > 0
+            ? Math.min(1, videoSeconds / lastFrameSeconds)
+            : null
+        }
         onSeek={(index) => {
-          setIsPlaying(false);
+          stopPlayback();
           onSeek(index);
         }}
       />
@@ -220,7 +363,7 @@ export function FramePlayer({
             <button
               type="button"
               onClick={() => {
-                setIsPlaying(false);
+                stopPlayback();
                 onSeek(index);
               }}
               aria-label={`Frame ${index + 1} at ${formatClipTime(thumb.tSeconds)}`}
@@ -245,10 +388,18 @@ interface TimelineProps {
   frames: ClipFrame[];
   events: ClipEvent[];
   currentIndex: number;
+  /** While the video plays, the playhead moves smoothly instead of frame by frame. */
+  playheadRatio: number | null;
   onSeek: (index: number) => void;
 }
 
-function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
+function Timeline({
+  frames,
+  events,
+  currentIndex,
+  playheadRatio,
+  onSeek,
+}: TimelineProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const lastIndex = Math.max(1, frames.length - 1);
   const position = (index: number) => `${(index / lastIndex) * 100}%`;
@@ -281,6 +432,10 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
   }
 
   const current = frames[currentIndex];
+  const playhead =
+    playheadRatio === null
+      ? position(currentIndex)
+      : `${playheadRatio * 100}%`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -337,7 +492,7 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
         <div aria-hidden className="absolute inset-x-0 top-1/2 h-px bg-hairline-strong" />
         <div
           className="absolute top-1/2 left-0 h-px bg-ink"
-          style={{ width: position(currentIndex) }}
+          style={{ width: playhead }}
         />
         {events.map((event) => (
           <span
@@ -349,7 +504,7 @@ function Timeline({ frames, events, currentIndex, onSeek }: TimelineProps) {
         ))}
         <span
           aria-hidden
-          style={{ left: position(currentIndex) }}
+          style={{ left: playhead }}
           className="absolute top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-ink after:absolute after:top-1/2 after:left-1/2 after:size-2 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border after:border-ink after:bg-void"
         />
       </div>

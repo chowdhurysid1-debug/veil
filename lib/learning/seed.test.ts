@@ -26,13 +26,17 @@ describe("seed data", () => {
     expect(SEED_LABELS.some((seed) => seed.label === "real")).toBe(true);
   });
 
-  it("leaves the shoe-tying false alarm for the live demo to teach", () => {
+  it("leaves the high-five false alarm for the live demo to teach", () => {
     const text = SEED_LABELS.map(
       (seed) => `${seed.description} ${seed.note ?? ""}`,
     )
       .join(" ")
       .toLowerCase();
-    expect(text).not.toMatch(/shoe|crouch|lace/);
+    expect(text).not.toMatch(/high.?five|slap|hands strike/);
+  });
+
+  it("has no fire labels: fire is not part of the demo", () => {
+    expect(SEED_LABELS.some((seed) => seed.type === "fire")).toBe(false);
   });
 
   it("fits the database column limits", () => {

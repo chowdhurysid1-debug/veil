@@ -69,22 +69,27 @@ describe("learnedThresholds", () => {
     expect(learnedThresholds(seedLabeledEvents(now))).toEqual({
       fall: 0.58,
       fight: 0.5,
-      theft: 0.51,
-      fire: 0.47,
-      other: 0.5,
+      theft: 0.5,
+      fire: 0.5,
+      other: 0.48,
     });
   });
 
-  it("raises only the fall threshold after the demo's shoe-tying false alarm", () => {
+  it("raises only the fight threshold after the demo's high-five false alarm", () => {
     const seed = seedLabeledEvents(now);
     const before = learnedThresholds(seed);
     const after = learnedThresholds([
       ...seed,
-      label({ label: "false_alarm", note: "Sat down to tie a shoe." }),
+      label({
+        eventType: "fight",
+        label: "false_alarm",
+        description:
+          "Two students meet in the hallway and their raised hands strike each other.",
+      }),
     ]);
-    expect(after.fall).toBe(0.6);
-    expect(after.fall).toBeGreaterThan(before.fall);
-    expect({ ...after, fall: before.fall }).toEqual(before);
+    expect(after.fight).toBe(0.54);
+    expect(after.fight).toBeGreaterThan(before.fight);
+    expect({ ...after, fight: before.fight }).toEqual(before);
   });
 
   it("counts labels from every site", () => {

@@ -10,11 +10,11 @@ Existing tools blur faces only on screen. Verkada's Live Face Blur keeps real fa
 
 ## User
 
-A school safety officer reviewing camera alerts. They need to know when something real happens (a fall, a fight, a fire) without anyone being able to browse students' faces.
+A school safety officer reviewing camera alerts. They need to know when something real happens (a fight, a fall, a stolen bike, a camera taped over) without anyone being able to browse students' faces.
 
 ## What makes it different
 
-1. **Faces are never stored in the clear.** Each face crop is encrypted in the browser before upload. Unlocking one needs a written reason and is logged forever.
+1. **Faces are never stored in the clear.** Every head is blurred in every frame of the video, in the browser, before upload. Each face crop is encrypted there too. Unlocking one needs a written reason and is logged forever.
 2. **The AI never sees a face.** Event detection runs on already-blurred frames.
 3. **It learns across every customer.** Every alert a human marks "real" or "false alarm" improves detection for all sites.
 4. **Footage is stamped at upload.** Any later edit is caught by "Verify".
@@ -22,16 +22,18 @@ A school safety officer reviewing camera alerts. They need to know when somethin
 
 ## The demo path
 
-1. Upload a 20 to 30 second clip. Every face comes out blurred; a counter shows "7 faces locked, 0 stored in the clear".
-2. The AI flags an event on the timeline: "Possible fall at 0:14, confidence 0.71".
-3. The officer taps **False alarm** (the person sat down to tie a shoe). The learning panel updates: "Learned from 1 new label across 2 sites".
-4. A second, similar clip is analyzed and is **not** flagged. A real fall in a third clip still is.
+Sample clips are stock footage with actors (Pexels), one click each on the upload screen. Reset the database first with `supabase/reset-demo.sql` and `supabase/seed.sql`.
+
+1. Run **Passing period**: students walk down a hallway. The clip plays back as video with every head blurred; a counter shows the faces locked and "0 stored in the clear". Nothing is flagged.
+2. Run **High-five**. The AI flags "Possible fight" when two students' hands meet.
+3. The officer taps **False alarm**: it was a high-five. The learning panel updates: "Learned from 1 new label across 2 sites", and the fight threshold rises at every site.
+4. Run **Another high-five** from a different camera: **not** flagged. Run **Student pinned to a wall**: still flagged. Learning did not hide a real fight.
 5. The officer unlocks one face. The app requires a reason; the unlock appears in the audit log.
 6. Edit one byte of the stamped clip and press **Verify**: "Tampered. Hash does not match the stamp from 21:04."
 
 ## What the AI does
 
-- **Input:** 3 to 20 blurred JPEG frames, 640px wide from one clip, plus few-shot examples of past human labels (real and false alarm) for the same event types across all sites.
+- **Input:** 3 to 20 blurred JPEG frames, 640px wide, sampled up to twice a second from one clip, plus few-shot examples of past human labels (real and false alarm) for the same event types across all sites.
 - **Output (Zod, `lib/contracts.ts`):** `{ events: [{ frameIndex, type: "fall" | "fight" | "theft" | "fire" | "other", confidence: 0..1, description }] }`, max 10 events.
 - **Learning:** few-shot examples retrieved from the `feedback` table, plus a per-type confidence threshold calibrated from each type's false-alarm rate. Both are visible in the learning panel.
 - **Fallback:** if the call fails or the output does not parse, the clip is still stored and blurred, and the timeline shows "Analysis unavailable, review manually". No raw error reaches the UI.

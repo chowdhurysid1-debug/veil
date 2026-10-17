@@ -13,7 +13,7 @@ export default function NewClipPage() {
     <PageContainer>
       <PageHeader
         title="Upload a clip"
-        description="Faces are blurred and encrypted on this device first. The server only receives blurred frames and sealed face crops."
+        description="Faces are blurred and encrypted on this device first. The server only receives blurred frames, a blurred video, and sealed face crops."
       />
       <UploadFlow />
     </PageContainer>

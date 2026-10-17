@@ -8,6 +8,8 @@ import {
   StorageError,
   VAULT_BUCKET,
   vaultPath,
+  VIDEOS_BUCKET,
+  videoPath,
   type StorageApi,
 } from "./storage";
 
@@ -29,6 +31,14 @@ function fakeStorage(overrides: Partial<BucketApi> = {}) {
       error: null,
     })),
     remove: vi.fn(async () => ({ error: null })),
+    createSignedUploadUrl: vi.fn(async (path: string) => ({
+      data: { signedUrl: `https://signed.test/upload/${path}?token=t` },
+      error: null,
+    })),
+    createSignedUrl: vi.fn(async (path: string) => ({
+      data: { signedUrl: `https://signed.test/${path}` },
+      error: null,
+    })),
     ...overrides,
   };
   const from = vi.fn(() => bucket);
@@ -125,6 +135,51 @@ describe("createSupabaseBlobStore", () => {
         30,
       ),
     ).rejects.toThrow(/b\.bin failed: Object not found/);
+  });
+
+  it("signs a one-time video upload that cannot overwrite", async () => {
+    const { storage, bucket, from } = fakeStorage();
+    const url = await createSupabaseBlobStore(storage).signedUploadUrl(
+      VIDEOS_BUCKET,
+      videoPath("clip-1"),
+    );
+    expect(from).toHaveBeenCalledWith("videos");
+    expect(bucket.createSignedUploadUrl).toHaveBeenCalledWith("clip-1.mp4", {
+      upsert: false,
+    });
+    expect(url).toBe("https://signed.test/upload/clip-1.mp4?token=t");
+  });
+
+  it("returns null for a clip with no blurred video", async () => {
+    const { storage } = fakeStorage({
+      createSignedUrl: async () => ({
+        data: null,
+        error: { message: "Object not found" },
+      }),
+    });
+    await expect(
+      createSupabaseBlobStore(storage).signedUrlIfExists(
+        VIDEOS_BUCKET,
+        "clip-1.mp4",
+        600,
+      ),
+    ).resolves.toBeNull();
+  });
+
+  it("still throws when signing fails for any other reason", async () => {
+    const { storage } = fakeStorage({
+      createSignedUrl: async () => ({
+        data: null,
+        error: { message: "Bucket not found" },
+      }),
+    });
+    await expect(
+      createSupabaseBlobStore(storage).signedUrlIfExists(
+        VIDEOS_BUCKET,
+        "clip-1.mp4",
+        600,
+      ),
+    ).rejects.toThrow(StorageError);
   });
 });
 
