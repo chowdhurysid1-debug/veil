@@ -75,19 +75,14 @@ function normalizeBox(
 /**
  * Detect faces in all extracted frames.
  * Returns normalized bounding boxes (0..1) per the contracts.
- * If the model fails to load, returns zero faces (graceful fallback).
+ * Fails closed: if the model cannot load, throws instead of silently
+ * returning zero faces, which would let unblurred frames through.
  */
 export async function detectFaces(
   frames: ExtractedFrame[],
   onProgress?: (done: number, total: number) => void,
 ): Promise<DetectFacesResult> {
-  let detector: FaceDetectorInstance;
-  try {
-    detector = await getDetector();
-  } catch {
-    // Fallback: no faces found
-    return { faces: [], totalFaces: 0 };
-  }
+  const detector = await getDetector();
 
   const allFaces: FaceDetection[] = [];
 

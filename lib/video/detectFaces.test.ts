@@ -80,6 +80,20 @@ describe("detectFaces", () => {
     ]);
   });
 
+  it("throws when model fails to load (fail closed)", async () => {
+    const { FilesetResolver } = await import("@mediapipe/tasks-vision");
+    (
+      FilesetResolver as unknown as {
+        forVisionTasks: ReturnType<typeof vi.fn>;
+      }
+    ).forVisionTasks.mockRejectedValueOnce(new Error("network error"));
+
+    const frames = [makeFakeFrame(0)];
+    await expect(detectFaces(frames)).rejects.toThrow(
+      "Face detection model failed to load",
+    );
+  });
+
   it("handles frames with no faces", async () => {
     const { FaceDetector } = await import("@mediapipe/tasks-vision");
     const mockDetector = await (

@@ -84,11 +84,25 @@ export async function processClip(
     );
   }
 
-  // Step 2: Detect faces
+  // Step 2: Detect faces (fail closed: if detection is unavailable, stop the pipeline)
   report("faces", 0, "Detecting faces...");
-  const detectionResult = await detectFaces(extracted.frames, (done, total) => {
-    report("faces", done / total, `Scanning frame ${done}/${total} for faces`);
-  });
+  let detectionResult;
+  try {
+    detectionResult = await detectFaces(extracted.frames, (done, total) => {
+      report(
+        "faces",
+        done / total,
+        `Scanning frame ${done}/${total} for faces`,
+      );
+    });
+  } catch {
+    for (const frame of extracted.frames) {
+      frame.bitmap.close();
+    }
+    throw new PipelineError(
+      "Face detection is unavailable. Cannot process video without it, because unblurred faces would be uploaded.",
+    );
+  }
 
   // Step 3: Blur faces
   report("blur", 0, "Blurring faces...");
