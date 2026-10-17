@@ -43,29 +43,30 @@ const TEAM = [
 const BUILD_STATS = [
   ["84", "Commits"],
   ["8", "API routes"],
-  ["207", "Tests passing"],
+  ["251", "Tests passing"],
 ] as const;
 
 const DEMO_STEPS = [
   {
-    action: "Upload a 20 to 30 second clip",
+    action: "Run the hallway clip: students walk past",
     proves:
-      "Every face is blurred and encrypted before upload. 0 stored in the clear.",
+      "Every head is blurred in every frame, in the browser, before upload. 0 stored in the clear.",
     href: "/clips/new",
   },
   {
-    action: "The AI flags a possible fall at 0:14",
-    proves: "The model found it from blurred frames. It never saw a face.",
-    href: "/clips",
+    action: "Run the gym clip: the AI flags a possible fight",
+    proves:
+      "Two students grab each other. Faces are blurred, so the AI cannot tell a hug from a scuffle.",
+    href: "/clips/new",
   },
   {
-    action: "Mark it False alarm: they sat down to tie a shoe",
-    proves: "One label moves the fall threshold for every site.",
+    action: "Mark it False alarm: it was a hug",
+    proves: "One label moves the fight threshold for every site.",
     href: "/learning",
   },
   {
-    action: "A similar clip is not flagged. A real fall still is",
-    proves: "Fewer false pages, no missed falls.",
+    action: "Another hug is not flagged. A student pinned to a wall still is",
+    proves: "Fewer false pages, no missed fights.",
     href: "/clips/new",
   },
   {
@@ -183,11 +184,11 @@ const RISKS = [
   },
   {
     risk: "One site can sway everyone",
-    plan: "Learning is pooled. Cap how far any one site moves a threshold, and give fire a ceiling.",
+    plan: "Learning is pooled. Cap how far any one site moves a threshold.",
   },
   {
     risk: "Evals are text cases",
-    plan: "11 written cases prove the demo path. A labeled video set from a pilot proves accuracy.",
+    plan: "19 written cases and spot checks on 7 stock clips prove the demo path. A labeled video set from a pilot proves accuracy.",
   },
 ] as const;
 
@@ -454,7 +455,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 25,
     say: [
       "This is the part that compounds.",
-      "An officer marks a shoe-tie False alarm. The fall threshold moves from 0.58 to 0.60 for every site.",
+      "An officer marks a hug False alarm. The fight threshold moves from 0.50 to 0.54 for every site.",
       "More sites, more labels, fewer false pages. A copy starts at zero labels.",
     ],
     question: {
@@ -473,11 +474,11 @@ export const SLIDES: PitchSlide[] = [
           </Reveal>
           <Reveal order={1} className="flex flex-col border-t border-hairline">
             {[
-              ["Officer decision", "Shoe-tie marked false alarm"],
-              ["Fall threshold", "0.58 to 0.60"],
+              ["Officer decision", "Hug marked false alarm"],
+              ["Fight threshold", "0.50 to 0.54"],
               ["Applies to", "Every site on Veil"],
-              ["Next shoe-tie", "Not flagged"],
-              ["Next real fall", "Flagged, 0.93"],
+              ["Next hug", "Not flagged"],
+              ["Next real fight", "Flagged, 0.65"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -508,12 +509,12 @@ export const SLIDES: PitchSlide[] = [
     why: "Numbers you measured beat adjectives every time.",
     seconds: 20,
     say: [
-      "207 automated tests pass, covering the crypto, the learning math and every route.",
-      "11 of 11 eval cases passed on two runs. Recall was 1.00 on every event type.",
-      "Fall precision is 0.67 because the demo's first shoe-tie alert is meant to fire. That is the false alarm the officer teaches away.",
+      "251 automated tests pass, covering the blur, the crypto, the learning math and every route.",
+      "19 of 19 eval cases passed on two runs. Recall was 1.00 on every event type.",
+      "Fight precision is 0.60 because the first hug is meant to fire. With faces blurred, the AI reports embraces until an officer teaches it what is normal.",
     ],
     question: {
-      ask: "Are 11 cases enough?",
+      ask: "Are 19 cases enough?",
       answer:
         "No. They prove the demo path, not real-world accuracy. A labeled video set from a pilot is next.",
     },
@@ -522,16 +523,16 @@ export const SLIDES: PitchSlide[] = [
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
           {[
             [
-              "207",
-              "Automated tests passing: crypto round trips, thresholds, audit-first unlock, tamper checks.",
+              "251",
+              "Automated tests passing: head blur, crypto round trips, thresholds, audit-first unlock, tamper checks.",
             ],
             [
-              "11 / 11",
+              "19 / 19",
               "Eval cases passed on two separate runs against the pinned model.",
             ],
             [
               "1.00",
-              "Recall on every event type: fall, fight, theft, fire, other.",
+              "Recall on every event type in the evals: fall, fight, theft, and camera tampering.",
             ],
           ].map(([figure, text], index) => (
             <Reveal

@@ -204,16 +204,15 @@ function Readout({ label, value }: { label: string; value: string }) {
   );
 }
 
-// From docs/progress/backend.md (B5): thresholds the seed labels produce.
+// Thresholds the seed labels in lib/learning/seed.ts produce (lib/learning/thresholds.test.ts pins them).
 const SEED_STATS = {
   totalLabels: 20,
   sitesContributing: 2,
   byType: [
     { type: "fall", threshold: 0.58 },
     { type: "fight", threshold: 0.5 },
-    { type: "theft", threshold: 0.51 },
-    { type: "fire", threshold: 0.47 },
-    { type: "other", threshold: 0.5 },
+    { type: "theft", threshold: 0.5 },
+    { type: "other", threshold: 0.48 },
   ] satisfies { type: EventType; threshold: number }[],
 };
 
