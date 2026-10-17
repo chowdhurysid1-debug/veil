@@ -9,6 +9,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - C4: Real / False alarm review with optimistic label, 5 s undo toast (request sent only when the toast closes), success toast "Learned from N new labels across M sites" with the new threshold. 302e373
 - C5: /learning dashboard (label totals, false-alarm trend chart with hover and table view, per-type threshold meters, recent labels) plus a shared-learning card on the clip view that pulses "Learned from 1 new label across 2 sites" after a label saves. 7f6a7e7
 - C6: unlock dialog (reason category + 15-char written reason, warning copy, audit-first), face decrypted in the browser with `decryptFace` and shown for 30 s then re-locked; locked-faces list and clickable face boxes on the clip view; /audit timeline. df381a2
+- C7: /verify: pick a stamped clip (or arrive from the clip page), drop the file, hash it in the browser with `sha256File`, big Intact / Tampered verdict with the stamp time and both hash prefixes. 7c787c5
 
 ## Contract requests
 
