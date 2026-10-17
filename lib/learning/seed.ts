@@ -29,7 +29,7 @@ interface SeedLabel {
   note: string | null;
 }
 
-// No high-five false alarm on purpose: the demo teaches that one live.
+// No hug or other friendly-contact false alarm on purpose: the demo teaches that one live.
 export const SEED_LABELS: readonly SeedLabel[] = [
   {
     siteIndex: 0,
@@ -90,8 +90,8 @@ export const SEED_LABELS: readonly SeedLabel[] = [
     type: "fight",
     label: "false_alarm",
     description:
-      "Two people play-wrestle while laughing, then walk away together.",
-    note: "Friends messing around.",
+      "Two people stand face to face and argue with big arm gestures, without touching, then walk off in different directions.",
+    note: "Argument only, no contact.",
   },
   {
     siteIndex: 0,

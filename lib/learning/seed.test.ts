@@ -26,13 +26,14 @@ describe("seed data", () => {
     expect(SEED_LABELS.some((seed) => seed.label === "real")).toBe(true);
   });
 
-  it("leaves the high-five false alarm for the live demo to teach", () => {
+  it("leaves the hug false alarm for the live demo to teach", () => {
     const text = SEED_LABELS.map(
       (seed) => `${seed.description} ${seed.note ?? ""}`,
     )
       .join(" ")
       .toLowerCase();
-    expect(text).not.toMatch(/high.?five|slap|hands strike/);
+    // A friendly-contact false alarm here would teach the hug before the demo does.
+    expect(text).not.toMatch(/hug|embrace|wrestl|laugh/);
   });
 
   it("has no fire labels: fire is not part of the demo", () => {

@@ -25,9 +25,9 @@ A school safety officer reviewing camera alerts. They need to know when somethin
 Sample clips are stock footage with actors (Pexels), one click each on the upload screen. Reset the database first with `supabase/reset-demo.sql` and `supabase/seed.sql`.
 
 1. Run **Passing period**: students walk down a hallway. The clip plays back as video with every head blurred; a counter shows the faces locked and "0 stored in the clear". Nothing is flagged.
-2. Run **High-five**. The AI flags "Possible fight" when two students' hands meet.
-3. The officer taps **False alarm**: it was a high-five. The learning panel updates: "Learned from 1 new label across 2 sites", and the fight threshold rises at every site.
-4. Run **Another high-five** from a different camera: **not** flagged. Run **Student pinned to a wall**: still flagged. Learning did not hide a real fight.
+2. Run **Two students grab each other** (gym camera). Faces are blurred, so the AI cannot read expressions and reports the grab as "Possible fight".
+3. The officer taps **False alarm**: it was a hug. The learning panel updates: "Learned from 1 new label across 2 sites", and the fight threshold rises at every site.
+4. Run **Another hug** from the courtyard camera: **not** flagged. Run **Student pinned to a wall**: still flagged. Learning did not hide a real fight.
 5. The officer unlocks one face. The app requires a reason; the unlock appears in the audit log.
 6. Edit one byte of the stamped clip and press **Verify**: "Tampered. Hash does not match the stamp from 21:04."
 

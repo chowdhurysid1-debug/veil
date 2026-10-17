@@ -2,7 +2,7 @@
 -- Run in the Supabase dashboard SQL editor before a rehearsal or the live demo.
 --
 -- Removes every uploaded clip with its frames, alerts, labels, and locked faces, so the
--- high-five false alarm can be taught again. Seed rows are removed too, so edits to
+-- hug false alarm can be taught again. Seed rows are removed too, so edits to
 -- lib/learning/seed.ts apply when seed.sql runs next.
 --
 -- The audit log is append-only and is never touched. A clip with a face that was ever

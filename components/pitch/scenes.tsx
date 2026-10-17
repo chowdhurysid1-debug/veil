@@ -714,7 +714,7 @@ const TERMINAL_SCRIPT: { kind: "command" | "output" | "pass"; text: string }[] =
     { kind: "command", text: "npm test" },
     {
       kind: "output",
-      text: "PASS  lib/video/headBoxes.test.ts            10 tests",
+      text: "PASS  lib/video/headBoxes.test.ts            11 tests",
     },
     {
       kind: "output",
@@ -741,7 +741,7 @@ const TERMINAL_SCRIPT: { kind: "command" | "output" | "pass"; text: string }[] =
       text: "PASS  lib/server/handlers/verify.test.ts      6 tests",
     },
     { kind: "output", text: "Test Files  33 passed (33)" },
-    { kind: "pass", text: "Tests  244 passed (244)" },
+    { kind: "pass", text: "Tests  251 passed (251)" },
   ];
 const TYPE_MS = 45;
 const OUTPUT_MS = 140;

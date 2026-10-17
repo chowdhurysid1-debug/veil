@@ -12,7 +12,7 @@ Two SQL files, pasted into the Supabase dashboard. No CLI needed.
 
 ## Before every rehearsal and the live demo
 
-Paste `reset-demo.sql`, then `seed.sql`. The reset removes every uploaded clip and label, so the high-five false alarm can be taught again from scratch. The audit log is never touched, and a clip with a face that was ever unlocked stays because its audit entry points at it.
+Paste `reset-demo.sql`, then `seed.sql`. The reset removes every uploaded clip and label, so the hug false alarm can be taught again from scratch. The audit log is never touched, and a clip with a face that was ever unlocked stays because its audit entry points at it.
 
 `seed.sql` is generated. To change seed data, edit `lib/learning/seed.ts`, then run `npx tsx scripts/seed-sql.mts`.
 

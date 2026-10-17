@@ -58,11 +58,20 @@ export function headFromPerson(
 }
 
 // On security footage the short-range face model also fires on blank walls with
-// boxes a third of the frame wide. A real face on a fixed camera is far smaller.
-const MAX_FACE_WIDTH_RATIO = 0.2;
+// boxes a third of the frame wide, at scores of 0.51 to 0.54. A real close-up
+// face scored 0.70. A wide box is dropped only when it is also unsure, so a
+// confident close-up face is always blurred: an extra box only costs blur.
+const LARGE_FACE_WIDTH_RATIO = 0.2;
+const LARGE_FACE_MIN_SCORE = 0.65;
 
-export function isPlausibleFace(face: PixelBox, frameWidth: number): boolean {
-  return face.width > 0 && face.width <= frameWidth * MAX_FACE_WIDTH_RATIO;
+export function isPlausibleFace(
+  face: PixelBox,
+  score: number,
+  frameWidth: number,
+): boolean {
+  if (face.width <= 0) return false;
+  const isLarge = face.width > frameWidth * LARGE_FACE_WIDTH_RATIO;
+  return !isLarge || score >= LARGE_FACE_MIN_SCORE;
 }
 
 /** Normalize a pixel box to 0..1 of the frame, clamped inside it. */

@@ -63,7 +63,7 @@ const TEAM = [
 
 // From the repo on 2026-10-17: npm test and public/demo.
 const BUILD_STATS = [
-  { value: 244, label: "Tests passing" },
+  { value: 251, label: "Tests passing" },
   { value: 33, label: "Test files" },
   { value: 7, label: "Real sample clips" },
 ] as const;
@@ -76,18 +76,19 @@ const DEMO_STEPS = [
     href: "/clips/new",
   },
   {
-    action: "Run High-five",
-    proves: "The AI flags a possible fight, from blurred frames only.",
+    action: "Run Gym hug",
+    proves:
+      "Flagged as a possible fight, 0.60. Faces are blurred, so a hug looks like a scuffle.",
     href: "/clips/new",
   },
   {
-    action: "Mark it False alarm",
+    action: "Mark it False alarm: it was a hug",
     proves: "Fight threshold 0.50 to 0.54, at every site.",
     href: "/learning",
   },
   {
-    action: "Another high-five, then a student pinned to a wall",
-    proves: "The high-five stays quiet. The real fight still flags.",
+    action: "Courtyard hug, then a student pinned to a wall",
+    proves: "The hug stays quiet. The real fight still flags, 0.65.",
     href: "/clips/new",
   },
   {
@@ -384,7 +385,7 @@ export const SLIDES: PitchSlide[] = [
     say: [
       "The real console runs inside this slide. Click a step on the left to jump the screen to it.",
       "Narrate what each step proves, not what you are clicking.",
-      "Reset the database before you present (supabase/reset-demo.sql, then seed.sql), or the high-five is already learned and will not flag.",
+      "Reset the database before you present (supabase/reset-demo.sql, then seed.sql), or the hug is already learned and will not flag.",
     ],
     question: {
       ask: "What if the AI misses a real fight?",
@@ -422,7 +423,7 @@ export const SLIDES: PitchSlide[] = [
     seconds: 25,
     say: [
       "This is the part that compounds.",
-      "One officer marks a high-five as a false alarm. The hub passes it to every site. The fight threshold moves from 0.50 to 0.54 everywhere.",
+      "One officer marks a hug as a false alarm. The hub passes it to every site. The fight threshold moves from 0.50 to 0.54 everywhere.",
       "More sites, more labels, fewer false pages. A copy starts at zero labels.",
     ],
     question: {
@@ -439,9 +440,9 @@ export const SLIDES: PitchSlide[] = [
           </div>
           <Reveal order={2} className="flex flex-col border-t border-hairline">
             {[
-              ["Officer marks", "High-five: false alarm"],
+              ["Officer marks", "Hug: false alarm"],
               ["Fight threshold", "0.50 to 0.54"],
-              ["Pinned to a wall", "Still flagged"],
+              ["Pinned to a wall", "Still flagged, 0.65"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -468,8 +469,8 @@ export const SLIDES: PitchSlide[] = [
     seconds: 20,
     say: [
       "This is our real test output.",
-      "244 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math, tamper checks.",
-      "13 eval cases cover every demo clip plus look-alikes, and run against the real model with npm run evals.",
+      "251 tests pass: head blurring, per-face encryption, audit-first unlock, the learning math, tamper checks.",
+      "19 of 19 eval cases pass against the real model, covering every demo clip plus look-alikes.",
     ],
     question: {
       ask: "How accurate is it on real video?",
@@ -484,8 +485,8 @@ export const SLIDES: PitchSlide[] = [
           </Reveal>
           <Reveal order={2} className="flex flex-col">
             {[
-              { value: 244, label: "Tests passing" },
-              { value: 13, label: "Eval cases, every demo clip" },
+              { value: 251, label: "Tests passing" },
+              { value: 19, label: "Of 19 eval cases passed" },
               { value: 7, label: "Real clips with actors" },
             ].map((stat) => (
               <div

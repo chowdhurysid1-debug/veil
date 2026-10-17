@@ -45,23 +45,21 @@ describe("headFromPerson", () => {
 });
 
 describe("isPlausibleFace", () => {
-  it("keeps faces the size a fixed camera sees", () => {
-    expect(
-      isPlausibleFace(
-        { originX: 300, originY: 40, width: 60, height: 70 },
-        640,
-      ),
-    ).toBe(true);
+  it("keeps faces the size a fixed camera sees, at any score", () => {
+    const face = { originX: 300, originY: 40, width: 60, height: 70 };
+    expect(isPlausibleFace(face, 0.5, 640)).toBe(true);
   });
 
-  // Seen on real hallway footage: a 250px "face" on a blank wall.
-  it("drops wall-sized false positives", () => {
-    expect(
-      isPlausibleFace(
-        { originX: 10, originY: 0, width: 250, height: 250 },
-        640,
-      ),
-    ).toBe(false);
+  // Seen on real hallway footage: a 233px "face" on a blank wall, score 0.51.
+  it("drops a wall-sized box the model is unsure about", () => {
+    const wall = { originX: 10, originY: 0, width: 233, height: 233 };
+    expect(isPlausibleFace(wall, 0.51, 640)).toBe(false);
+  });
+
+  // The collar-grab clip, filmed close: a real face 173px wide in a 640px frame, score 0.70.
+  it("keeps a confident close-up face wider than a fifth of the frame", () => {
+    const closeUp = { originX: 200, originY: 120, width: 173, height: 173 };
+    expect(isPlausibleFace(closeUp, 0.7, 640)).toBe(true);
   });
 });
 

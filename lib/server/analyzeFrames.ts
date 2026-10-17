@@ -1,5 +1,6 @@
 import {
   generateText,
+  NoObjectGeneratedError,
   Output,
   type FilePart,
   type LanguageModel,
@@ -48,7 +49,9 @@ Report only these event types:
 
 For each event return the frameIndex where it is clearest, the type, a confidence from 0 to 1, and a description of at most 25 words. Describe actions and positions only, never appearance, clothing, skin, or hair.
 
-Confidence: 0.9 or more when unmistakable, 0.6 to 0.8 when likely, under 0.5 when unsure. When people make sudden hard contact and you cannot tell whether it is friendly or violent, report it as a fight at 0.6 to 0.7 so an officer can decide.
+Confidence: 0.9 or more when unmistakable, 0.6 to 0.8 when likely, under 0.5 when unsure.
+
+Faces are blurred, so you cannot read expressions, and officers decide what is normal at their sites. Report any time two people grab, embrace, or wrestle each other as a fight at 0.6 to 0.7, even when it looks friendly, unless officers have marked that pattern a false alarm. Report clear violence higher.
 
 Officers have reviewed past alerts from every site. When what you see matches a pattern they marked as a false alarm, leave it out or give it a confidence under 0.4. When it matches a pattern they confirmed as real, report it.
 
@@ -120,8 +123,8 @@ export function analyzeFrames(
     maxRetries = 1,
   }: AnalyzeOptions = {},
 ): Promise<FallbackResult<AnalyzeOutput>> {
-  return withFallback("analyzeFrames", ANALYZE_FALLBACK, async () => {
-    const { output } = await generateText({
+  const generate = () =>
+    generateText({
       model,
       system: ANALYZE_SYSTEM_PROMPT,
       messages: buildAnalyzeMessages(input),
@@ -130,13 +133,35 @@ export function analyzeFrames(
       timeout: timeoutMs,
       maxRetries,
     });
+
+  return withFallback("analyzeFrames", ANALYZE_FALLBACK, async () => {
+    // About 1 call in 13 on real clips came back as unparseable JSON. One more
+    // try nearly always parses; a second failure still falls back.
+    const { output } = await generate().catch((error: unknown) => {
+      if (NoObjectGeneratedError.isInstance(error)) return generate();
+      throw error;
+    });
     // The SDK validates too, but parse again so this boundary is explicit and typed.
     const parsed = analyzeOutputSchema.parse(output);
     const sentIndexes = new Set(input.frames.map((frame) => frame.frameIndex));
     return {
-      events: parsed.events.filter((event) =>
-        sentIndexes.has(event.frameIndex),
-      ),
+      events: parsed.events
+        .filter((event) => sentIndexes.has(event.frameIndex))
+        .map((event) => ({
+          ...event,
+          description: cleanDescription(event.description),
+        })),
     };
   });
+}
+
+// Seen on real footage: the model sometimes runs past the end of a description
+// into JSON or markup, e.g. 'pinned.}]}</br>I need to correct the JSON.{'.
+// A description never needs braces, brackets, or angle brackets.
+const STRAY_OUTPUT = /[{}[\]<>]/;
+
+export function cleanDescription(description: string): string {
+  const cut = description.search(STRAY_OUTPUT);
+  const kept = (cut === -1 ? description : description.slice(0, cut)).trim();
+  return kept.length > 0 ? kept : "Activity in the frame needs a human look.";
 }

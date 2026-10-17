@@ -28,7 +28,10 @@ export type DetectableImage = (
 
 interface Detector {
   detect(image: TexImageSource): {
-    detections: Array<{ boundingBox?: PixelBox }>;
+    detections: Array<{
+      boundingBox?: PixelBox;
+      categories?: Array<{ score: number }>;
+    }>;
   };
 }
 
@@ -61,19 +64,23 @@ async function getDetectors(): Promise<Detectors> {
         const { FilesetResolver, FaceDetector, ObjectDetector } =
           await import("@mediapipe/tasks-vision");
         const vision = await FilesetResolver.forVisionTasks(WASM_CDN);
+        const createPeople = (delegate: "CPU" | "GPU") =>
+          ObjectDetector.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: PERSON_MODEL, delegate },
+            runningMode: "IMAGE",
+            scoreThreshold: PERSON_SCORE_THRESHOLD,
+            categoryAllowlist: ["person"],
+            maxResults: MAX_PEOPLE,
+          });
         const [faces, people] = await Promise.all([
           FaceDetector.createFromOptions(vision, {
             baseOptions: { modelAssetPath: FACE_MODEL, delegate: "CPU" },
             runningMode: "IMAGE",
             minDetectionConfidence: 0.5,
           }),
-          ObjectDetector.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: PERSON_MODEL, delegate: "CPU" },
-            runningMode: "IMAGE",
-            scoreThreshold: PERSON_SCORE_THRESHOLD,
-            categoryAllowlist: ["person"],
-            maxResults: MAX_PEOPLE,
-          }),
+          // The person model runs every video frame: 54 ms on the GPU against
+          // 136 ms on the CPU. Machines without WebGL fall back to the CPU.
+          createPeople("GPU").catch(() => createPeople("CPU")),
         ]);
         return {
           faces: faces as unknown as Detector,
@@ -101,8 +108,9 @@ export async function detectHeads(
   const { faces, people } = await getDetectors();
   const pixelBoxes: PixelBox[] = [];
 
-  for (const { boundingBox } of faces.detect(image).detections) {
-    if (boundingBox && isPlausibleFace(boundingBox, image.width)) {
+  for (const { boundingBox, categories } of faces.detect(image).detections) {
+    const score = categories?.[0]?.score ?? 1;
+    if (boundingBox && isPlausibleFace(boundingBox, score, image.width)) {
       pixelBoxes.push(boundingBox);
     }
   }
