@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CircleCheck, ShieldCheck, Stamp } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ClipDetail, ClipEvent, FeedbackLabel } from "@/lib/contracts";
+import type {
+  ClipDetail,
+  ClipEvent,
+  FeedbackLabel,
+  LearningStats,
+} from "@/lib/contracts";
 
 import { veilApi } from "./api";
 import { friendlyErrorMessage } from "./errors";
@@ -20,6 +25,7 @@ import {
 } from "./format";
 import { FramePlayer } from "./FramePlayer";
 import { recordLearnedLabel } from "./learningSession";
+import { LearningSummaryCard } from "./LearningSummaryCard";
 import { ReviewControls } from "./ReviewControls";
 import { ErrorState } from "./States";
 import { useToast } from "./Toaster";
@@ -51,7 +57,11 @@ function ClipReview({
   clip: ClipDetail;
   onClipChange: ClipUpdater;
 }) {
-  const { handleLabel, savingIds } = useEventReview(onClipChange);
+  const learning = useVeilQuery("learning", veilApi.getLearningStats);
+  const updateLearning = learning.update;
+  const { handleLabel, savingIds } = useEventReview(onClipChange, (stats) =>
+    updateLearning(() => stats),
+  );
   const frames = useMemo(
     () => [...clip.frames].sort((a, b) => a.frameIndex - b.frameIndex),
     [clip.frames],
@@ -139,6 +149,14 @@ function ClipReview({
               );
             })
           )}
+          {learning.state.status !== "error" && (
+            <LearningSummaryCard
+              stats={
+                learning.state.status === "success" ? learning.state.data : null
+              }
+              focusType={(firstFlagged ?? events[0])?.type ?? null}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -151,7 +169,10 @@ const UNDO_WINDOW_MS = 5000;
  * Optimistic labels with an undo window. The label shows at once; the request
  * goes out only when the undo notice closes, so Undo never needs a delete route.
  */
-function useEventReview(onClipChange: ClipUpdater) {
+function useEventReview(
+  onClipChange: ClipUpdater,
+  onLearned: (stats: LearningStats) => void,
+) {
   const router = useRouter();
   const { showToast } = useToast();
   const [savingIds, setSavingIds] = useState<ReadonlySet<string>>(new Set());
@@ -179,6 +200,7 @@ function useEventReview(onClipChange: ClipUpdater) {
       const { stats } = await veilApi.submitFeedback(event.id, { label });
       const newLabels = recordLearnedLabel();
       setSaving(event.id, false);
+      onLearned(stats);
       const row = stats.byType.find((item) => item.type === event.type);
       showToast({
         tone: "success",

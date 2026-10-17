@@ -41,6 +41,15 @@ export function eventHeadline(type: EventType, tSeconds: number): string {
   return `Possible ${what} at ${formatClipTime(tSeconds)}`;
 }
 
+/** ISO date "2026-10-16" -> "Oct 16". Dates are calendar days, so no time zone shift. */
+export function formatDay(isoDate: string): string {
+  return new Date(`${isoDate}T12:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /** ISO timestamp -> "21:04" in the viewer's time zone. */
 export function formatStampTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", {

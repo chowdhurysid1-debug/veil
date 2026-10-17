@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatClipTime,
+  formatDay,
   formatConfidence,
   formatPercent,
   pluralize,
@@ -48,5 +49,12 @@ describe("timelinePosition", () => {
     expect(timelinePosition(13.5, 27)).toBe(0.5);
     expect(timelinePosition(40, 27)).toBe(1);
     expect(timelinePosition(5, 0)).toBe(0);
+  });
+});
+
+describe("formatDay", () => {
+  it("formats a calendar day without shifting it across time zones", () => {
+    expect(formatDay("2026-10-16")).toBe("Oct 16");
+    expect(formatDay("2026-01-01")).toBe("Jan 1");
   });
 });

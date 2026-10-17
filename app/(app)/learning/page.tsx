@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Brain } from "lucide-react";
 
+import { LearningDashboard } from "@/components/veil/LearningDashboard";
 import { PageContainer, PageHeader } from "@/components/veil/PageHeader";
-import { EmptyState } from "@/components/veil/States";
 
-export const metadata: Metadata = { title: "Learning" };
+export const metadata: Metadata = {
+  title: "Learning",
+  description: "How human labels from every site tune Veil's alert thresholds.",
+};
 
-export default function Page() {
+export default function LearningPage() {
   return (
     <PageContainer>
-      <PageHeader title="Learning" description="Every alert someone labels improves detection at every site." />
-      <EmptyState
-        icon={Brain}
-        title="Nothing here yet"
-        description="This screen is being built next."
+      <PageHeader
+        title="Learning"
+        description="Every alert someone marks Real or False alarm tunes detection at every site. Nobody's face is part of a label."
       />
+      <LearningDashboard />
     </PageContainer>
   );
 }

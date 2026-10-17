@@ -15,6 +15,7 @@ function label(
     label: value,
     siteName: "Demo High School",
     createdAt: NOW,
+    day: "2026-10-16",
   });
 }
 

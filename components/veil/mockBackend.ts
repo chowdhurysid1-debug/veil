@@ -51,6 +51,8 @@ export function applyFeedbackToStats(
     label: FeedbackLabel;
     siteName: string;
     createdAt: string;
+    /** Calendar day (YYYY-MM-DD) the history point belongs to. */
+    day: string;
   },
 ): LearningStats {
   const existing = stats.byType.find((row) => row.type === input.eventType);
@@ -85,7 +87,7 @@ export function applyFeedbackToStats(
     totalLabels === 0
       ? 0
       : Math.round((totalFalseAlarms / totalLabels) * 100) / 100;
-  const today = input.createdAt.slice(0, 10);
+  const today = input.day;
   const lastPoint = stats.history.at(-1);
   const history =
     lastPoint?.date === today
@@ -144,6 +146,13 @@ const db: MockDb = {
   audit: structuredClone(MOCK_AUDIT),
   uploads: 0,
 };
+
+/** YYYY-MM-DD in the viewer's time zone, matching how the officer reads "today". */
+function localDay(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -293,6 +302,7 @@ export const mockBackend: VeilApi = {
       label: request.label,
       siteName: clip.detail.siteName,
       createdAt: new Date().toISOString(),
+      day: localDay(new Date()),
     });
     return {
       eventId,
