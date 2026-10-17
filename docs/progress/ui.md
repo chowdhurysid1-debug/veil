@@ -11,6 +11,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - C6: unlock dialog (reason category + 15-char written reason, warning copy, audit-first), face decrypted in the browser with `decryptFace` and shown for 30 s then re-locked; locked-faces list and clickable face boxes on the clip view; /audit timeline. df381a2
 - C7: /verify: pick a stamped clip (or arrive from the clip page), drop the file, hash it in the browser with `sha256File`, big Intact / Tampered verdict with the stamp time and both hash prefixes. 7c787c5
 - C8: landing page at / (replaces the template summarize demo): hero with a product mockup, the three SPEC.md figures each linked to its source, the "forgets faces" line, five-step how it works, CTA into /clips/new, footer with sources; scroll-aware nav. 584718b
+- C9 (clips): merged main (backend B1 to B9). `httpBackend` fetches every Tab B route and parses each response with `lib/contracts.ts`; server `{ error }` sentences are shown as-is, anything else gets the generic message. Clips list, upload (posts `DEMO_SITE_ID`), and clip view now run on the real API; checked end to end with a real upload (17 faces locked, signed frame URLs render). 79da413
 
 ## Contract requests
 
