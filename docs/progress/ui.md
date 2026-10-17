@@ -8,6 +8,7 @@ One line per finished milestone: id, what shipped, commit hash.
 - Merged main (pipeline A1 to A8). Upload screen now runs `processClip` from `@/lib/video`; deleted the UI's duplicate mock pipeline and hash helper. `PipelineError` messages are shown to the officer as-is. 2e4e777
 - C4: Real / False alarm review with optimistic label, 5 s undo toast (request sent only when the toast closes), success toast "Learned from N new labels across M sites" with the new threshold. 302e373
 - C5: /learning dashboard (label totals, false-alarm trend chart with hover and table view, per-type threshold meters, recent labels) plus a shared-learning card on the clip view that pulses "Learned from 1 new label across 2 sites" after a label saves. 7f6a7e7
+- C6: unlock dialog (reason category + 15-char written reason, warning copy, audit-first), face decrypted in the browser with `decryptFace` and shown for 30 s then re-locked; locked-faces list and clickable face boxes on the clip view; /audit timeline. df381a2
 
 ## Contract requests
 
@@ -17,3 +18,4 @@ One line per finished milestone: id, what shipped, commit hash.
 2. **Site id for uploads.** The upload screen posts `siteId = MOCK_SITES[0].id` (`3f2b8c1e-5d4a-4b7e-9c1f-2a6d8e0b4c71`, Demo High School). Please seed Demo High School with that id, or add `GET /api/sites` so the UI can look it up.
 3. **Analysis status on `ClipDetail` (integrator, optional).** `ClipDetail` cannot tell "no events" apart from "analysis failed". Proposed: `analysisStatus: z.enum(["complete", "unavailable"])` on `clipDetailSchema`, so the clip view can show "Analysis unavailable, review manually" after a reload, not only right after upload.
 4. ~~Pipeline progress semantics (Tab A).~~ Resolved: Tab A's `processClip` reports progress within each step, which is how the upload screen reads it.
+5. **Vault object format (Tab B).** The UI fetches `UnlockResponse.ciphertextUrl` and base64-encodes the response body before calling `decryptFace(ciphertextBase64, rawKeyBase64, ivBase64)`. So the vault object behind that URL must be the raw ciphertext bytes (base64-decoded `LockedFace.ciphertextBase64`), not base64 text.
