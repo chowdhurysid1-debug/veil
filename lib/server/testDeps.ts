@@ -1,14 +1,32 @@
 // Shared fixtures for handler tests: in-memory deps and a valid upload body.
 import { randomBytes, randomUUID } from "node:crypto";
 
-import type { CreateClipRequest } from "../contracts";
+import { vi } from "vitest";
+
+import {
+  createClipResponseSchema,
+  type CreateClipRequest,
+  type DetectedEvent,
+} from "../contracts";
 import { SEED_SITES } from "../learning/seed";
+import type { AnalyzeInput } from "./analyzeFrames";
 import { sha256Hex } from "./bytes";
 import type { VeilDeps } from "./deps";
+import { createClip } from "./handlers/clips";
 import { createMemoryBlobStore, createMemoryStore } from "./memoryStore";
 
 export const TEST_NOW = new Date("2026-10-16T21:04:00.000Z");
 export const DEMO_SITE_ID = SEED_SITES[0].id;
+
+// A stand-in for the model: returns these events, or the fallback when given null.
+export function fakeAnalyzer(events: DetectedEvent[] | null = []) {
+  return vi.fn(async (input: AnalyzeInput) => {
+    void input;
+    return events === null
+      ? { data: { events: [] }, isFallback: true }
+      : { data: { events }, isFallback: false };
+  });
+}
 
 export function makeDeps(overrides: Partial<VeilDeps> = {}) {
   const store = createMemoryStore();
@@ -20,9 +38,19 @@ export function makeDeps(overrides: Partial<VeilDeps> = {}) {
     vaultSecret: "v".repeat(40),
     now: () => TEST_NOW,
     newId: () => randomUUID(),
+    analyze: fakeAnalyzer(),
+    analyzeCap: { tryConsume: () => true },
     ...overrides,
   };
   return { deps, store, blobs };
+}
+
+export async function uploadClip(
+  deps: VeilDeps,
+  upload: CreateClipRequest = makeUpload(),
+) {
+  const response = await createClip(jsonRequest(upload), deps);
+  return createClipResponseSchema.parse(await response.json());
 }
 
 export function fakeJpeg(seed: number): Uint8Array {

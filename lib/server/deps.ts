@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 
+import { DAILY_ANALYZE_CAP } from "../ai";
+import { createDailyCap } from "../dailyCap";
+import { analyzeFrames, type Analyzer } from "./analyzeFrames";
 import { ConfigError, getServerEnv } from "./env";
 import { describeError, errorResponse } from "./http";
 import type { BlobStore } from "./storage";
@@ -15,8 +18,12 @@ export interface VeilDeps {
   vaultSecret: string;
   now: () => Date;
   newId: () => string;
+  analyze: Analyzer;
+  analyzeCap: { tryConsume(): boolean };
 }
 
+// Per server instance, like the generate cap. The Anthropic console spend limit is the real backstop.
+const analyzeCap = createDailyCap(DAILY_ANALYZE_CAP);
 let cached: VeilDeps | null = null;
 
 export function getDeps(): VeilDeps {
@@ -30,6 +37,8 @@ export function getDeps(): VeilDeps {
     vaultSecret: env.vaultSecret,
     now: () => new Date(),
     newId: () => randomUUID(),
+    analyze: (input) => analyzeFrames(input),
+    analyzeCap,
   };
   return cached;
 }

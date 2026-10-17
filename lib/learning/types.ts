@@ -11,3 +11,9 @@ export interface LabeledEvent {
   siteName: string;
   createdAt: string;
 }
+
+// What the model sees of a past label: no ids, no timestamps.
+export type ReviewedExample = Pick<
+  LabeledEvent,
+  "eventType" | "label" | "description" | "note" | "siteName"
+>;

@@ -1,21 +1,26 @@
 import {
   createClipRequestSchema,
+  type ClipDetail,
   type CreateClipRequest,
   type CreateClipResponse,
 } from "../../contracts";
+import { uniformThresholds } from "../../learning/thresholds";
 import { decodeBase64, isJpeg, sha256Hex } from "../bytes";
+import { toClipEvent } from "../clipEvents";
 import type { VeilDeps } from "../deps";
 import {
   errorResponse,
   firstIssue,
   json,
   MAX_CLIP_REQUEST_BYTES,
+  parseUuid,
   readJson,
   describeError,
 } from "../http";
 import { signStamp } from "../signing";
 import {
   CIPHERTEXT_CONTENT_TYPE,
+  FRAME_URL_TTL_SECONDS,
   FRAMES_BUCKET,
   framePath,
   JPEG_CONTENT_TYPE,
@@ -238,4 +243,51 @@ export async function createClip(
 
 export async function listClips(deps: VeilDeps): Promise<Response> {
   return json(await deps.store.listClips(CLIP_LIST_LIMIT));
+}
+
+// Blurred frames as short-lived signed URLs, events with their labels, and face boxes.
+// Face keys and ciphertext paths never leave the server here; only an unlock returns them.
+export async function getClipDetail(
+  id: string,
+  deps: VeilDeps,
+): Promise<Response> {
+  const clipId = parseUuid(id);
+  const clip = clipId ? await deps.store.getClip(clipId) : null;
+  if (!clipId || !clip) {
+    return errorResponse(404, "We could not find that clip.");
+  }
+
+  const [frames, events, faces] = await Promise.all([
+    deps.store.listFrames(clipId),
+    deps.store.listEvents(clipId),
+    deps.store.listFaces(clipId),
+  ]);
+  const urls = await deps.blobs.signedUrls(
+    FRAMES_BUCKET,
+    frames.map((frame) => frame.blurredPath),
+    FRAME_URL_TTL_SECONDS,
+  );
+  const thresholds = uniformThresholds();
+
+  const body: ClipDetail = {
+    id: clip.id,
+    filename: clip.filename,
+    siteName: clip.siteName,
+    stampedAt: clip.stampedAt,
+    facesLocked: faces.length,
+    eventsFlagged: events.filter((event) => event.flagged).length,
+    frames: frames.map((frame, index) => ({
+      id: frame.id,
+      frameIndex: frame.frameIndex,
+      tSeconds: frame.tSeconds,
+      blurredUrl: urls[index],
+    })),
+    events: events.map((event) => toClipEvent(event, thresholds)),
+    faces: faces.map((face) => ({
+      id: face.id,
+      frameIndex: face.frameIndex,
+      bbox: face.bbox,
+    })),
+  };
+  return json(body);
 }
